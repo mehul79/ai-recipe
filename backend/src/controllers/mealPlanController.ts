@@ -6,18 +6,18 @@ import Recipe from '../models/Recipe';
 export const getMealPlans = async (req: any, res: Response): Promise<void> => {
     try {
         const { startDate, endDate } = req.query;
-        let query: any = { userId: req.userId };
+        let query: any = { user_id: req.userId };
 
         if (startDate && endDate) {
-            query.mealDate = {
+            query.meal_date = {
                 $gte: new Date(startDate as string),
                 $lte: new Date(endDate as string)
             };
         }
 
         const mealPlans = await MealPlan.find(query)
-            .populate('recipeId', 'name imageUrl cookTime')
-            .sort({ mealDate: 1 });
+            .populate('recipe_id', 'name image_url cook_time')
+            .sort({ meal_date: 1 });
 
         res.status(200).json({ success: true, data: mealPlans });
     } catch (error) {
@@ -30,7 +30,7 @@ export const addMealPlan = async (req: any, res: Response): Promise<void> => {
     try {
         const mealPlan = await MealPlan.create({
             ...req.body,
-            userId: req.userId
+            user_id: req.userId
         });
         res.status(201).json({ success: true, data: mealPlan });
     } catch (error) {
@@ -41,7 +41,7 @@ export const addMealPlan = async (req: any, res: Response): Promise<void> => {
 // Delete a meal plan
 export const deleteMealPlan = async (req: any, res: Response): Promise<void> => {
     try {
-        const mealPlan = await MealPlan.findOneAndDelete({ _id: req.params.id, userId: req.userId });
+        const mealPlan = await MealPlan.findOneAndDelete({ _id: req.params.id, user_id: req.userId });
         if (!mealPlan) {
             res.status(404).json({ success: false, message: 'Meal plan not found' });
             return;

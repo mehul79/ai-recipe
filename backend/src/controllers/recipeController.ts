@@ -7,7 +7,7 @@ import { generateRecipeFromAI } from '../services/aiService';
 // Get all recipes for a user
 export const getRecipes = async (req: any, res: Response): Promise<void> => {
     try {
-        const recipes = await Recipe.find({ userId: req.userId }).sort({ createdAt: -1 });
+        const recipes = await Recipe.find({ user_id: req.userId }).sort({ createdAt: -1 });
         res.status(200).json({ success: true, data: recipes });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Internal server error' });
@@ -17,7 +17,7 @@ export const getRecipes = async (req: any, res: Response): Promise<void> => {
 // Get single recipe
 export const getRecipeById = async (req: any, res: Response): Promise<void> => {
     try {
-        const recipe = await Recipe.findOne({ _id: req.params.id, userId: req.userId });
+        const recipe = await Recipe.findOne({ _id: req.params.id, user_id: req.userId });
         if (!recipe) {
             res.status(404).json({ success: false, message: 'Recipe not found' });
             return;
@@ -33,7 +33,7 @@ export const saveRecipe = async (req: any, res: Response): Promise<void> => {
     try {
         const recipe = await Recipe.create({
             ...req.body,
-            userId: req.userId
+            user_id: req.userId
         });
         res.status(201).json({ success: true, data: recipe });
     } catch (error) {
@@ -44,7 +44,7 @@ export const saveRecipe = async (req: any, res: Response): Promise<void> => {
 // Delete a recipe
 export const deleteRecipe = async (req: any, res: Response): Promise<void> => {
     try {
-        const recipe = await Recipe.findOneAndDelete({ _id: req.params.id, userId: req.userId });
+        const recipe = await Recipe.findOneAndDelete({ _id: req.params.id, user_id: req.userId });
         if (!recipe) {
             res.status(404).json({ success: false, message: 'Recipe not found' });
             return;
@@ -64,13 +64,13 @@ export const generateRecipe = async (req: any, res: Response): Promise<void> => 
 
         // If usePantry is true, fetch user's pantry items
         if (usePantry) {
-            const pantryItems = await PantryItem.find({ userId: req.userId });
+            const pantryItems = await PantryItem.find({ user_id: req.userId });
             const pantryNames = pantryItems.map(item => item.name);
             ingredients = [...new Set([...ingredients, ...pantryNames])];
         }
 
         // Fetch user preferences
-        const preferences = await Preference.findOne({ userId: req.userId });
+        const preferences = await Preference.findOne({ user_id: req.userId });
 
         // Generate from AI
         const generatedRecipe = await generateRecipeFromAI(ingredients, preferences);

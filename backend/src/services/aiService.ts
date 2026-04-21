@@ -5,13 +5,13 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 export interface AIGeneratedRecipe {
     name: string;
     description: string;
-    cuisineType: string;
+    cuisine_type: string;
     difficulty: 'easy' | 'medium' | 'hard';
-    prepTime: number;
-    cookTime: number;
+    prep_time: number;
+    cook_time: number;
     servings: number;
     instructions: string[];
-    dietaryTags: string[];
+    dietary_tags: string[];
     ingredients: {
         name: string;
         quantity: number;
@@ -24,7 +24,7 @@ export interface AIGeneratedRecipe {
         fats: number;
         fiber: number;
     };
-    cookingTips: string[];
+    cooking_tips: string[];
 }
 
 export const generateRecipeFromAI = async (
@@ -41,16 +41,16 @@ export const generateRecipeFromAI = async (
         {
             "name": "Recipe Name",
             "description": "Short description",
-            "cuisineType": "Cuisine",
+            "cuisine_type": "Cuisine",
             "difficulty": "easy" | "medium" | "hard",
-            "prepTime": 10,
-            "cookTime": 20,
+            "prep_time": 10,
+            "cook_time": 20,
             "servings": 4,
             "instructions": ["Step 1", "Step 2"],
-            "dietaryTags": ["Tag 1", "Tag 2"],
+            "dietary_tags": ["Tag 1", "Tag 2"],
             "ingredients": [{"name": "Ingredient 1", "quantity": 100, "unit": "g"}],
             "nutrition": {"calories": 300, "protein": 10, "carbs": 40, "fats": 5, "fiber": 5},
-            "cookingTips": ["Tip 1", "Tip 2"]
+            "cooking_tips": ["Tip 1", "Tip 2"]
         }
         
         Provide only the JSON object, nothing else.

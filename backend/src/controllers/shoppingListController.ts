@@ -5,7 +5,7 @@ import PantryItem from '../models/PantryItem.js';
 // Get shopping list
 export const getShoppingList = async (req: any, res: Response): Promise<void> => {
     try {
-        const items = await ShoppingListItem.find({ userId: req.userId }).sort({ isChecked: 1, createdAt: -1 });
+        const items = await ShoppingListItem.find({ user_id: req.userId }).sort({ is_checked: 1, createdAt: -1 });
         res.status(200).json({ success: true, data: items });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Internal server error' });
@@ -17,7 +17,7 @@ export const addShoppingListItem = async (req: any, res: Response): Promise<void
     try {
         const newItem = await ShoppingListItem.create({
             ...req.body,
-            userId: req.userId
+            user_id: req.userId
         });
         res.status(201).json({ success: true, data: newItem });
     } catch (error) {
@@ -29,7 +29,7 @@ export const addShoppingListItem = async (req: any, res: Response): Promise<void
 export const updateShoppingListItem = async (req: any, res: Response): Promise<void> => {
     try {
         const item = await ShoppingListItem.findOneAndUpdate(
-            { _id: req.params.id, userId: req.userId },
+            { _id: req.params.id, user_id: req.userId },
             { ...req.body },
             { new: true }
         );
@@ -48,7 +48,7 @@ export const updateShoppingListItem = async (req: any, res: Response): Promise<v
 // Delete item
 export const deleteShoppingListItem = async (req: any, res: Response): Promise<void> => {
     try {
-        const item = await ShoppingListItem.findOneAndDelete({ _id: req.params.id, userId: req.userId });
+        const item = await ShoppingListItem.findOneAndDelete({ _id: req.params.id, user_id: req.userId });
         if (!item) {
             res.status(404).json({ success: false, message: 'Item not found' });
             return;
@@ -62,7 +62,7 @@ export const deleteShoppingListItem = async (req: any, res: Response): Promise<v
 // Sync checked items to pantry
 export const syncPantry = async (req: any, res: Response): Promise<void> => {
     try {
-        const checkedItems = await ShoppingListItem.find({ userId: req.userId, isChecked: true });
+        const checkedItems = await ShoppingListItem.find({ user_id: req.userId, is_checked: true });
 
         if (checkedItems.length === 0) {
             res.status(400).json({ success: false, message: 'No checked items to sync' });
@@ -73,8 +73,8 @@ export const syncPantry = async (req: any, res: Response): Promise<void> => {
         for (const item of checkedItems) {
             // Check if item already exists in pantry
             const existingPantryItem = await PantryItem.findOne({ 
-                userId: req.userId, 
-                name: { $regex: new RegExp('^' + item.ingredientName + '$', 'i') } 
+                user_id: req.userId, 
+                name: { $regex: new RegExp('^' + item.ingredient_name + '$', 'i') } 
             });
 
             if (existingPantryItem) {
@@ -82,8 +82,8 @@ export const syncPantry = async (req: any, res: Response): Promise<void> => {
                 await existingPantryItem.save();
             } else {
                 await PantryItem.create({
-                    userId: req.userId,
-                    name: item.ingredientName,
+                    user_id: req.userId,
+                    name: item.ingredient_name,
                     quantity: item.quantity,
                     unit: item.unit,
                     category: item.category
@@ -92,7 +92,7 @@ export const syncPantry = async (req: any, res: Response): Promise<void> => {
         }
 
         // Remove checked items from shopping list
-        await ShoppingListItem.deleteMany({ userId: req.userId, isChecked: true });
+        await ShoppingListItem.deleteMany({ user_id: req.userId, is_checked: true });
 
         res.status(200).json({ success: true, message: 'Pantry synchronized successfully' });
     } catch (error) {

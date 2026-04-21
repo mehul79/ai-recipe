@@ -1,17 +1,17 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IRecipe extends Document {
-    userId: mongoose.Types.ObjectId;
+    user_id: mongoose.Types.ObjectId;
     name: string;
     description: string;
-    cuisineType: string;
+    cuisine_type: string;
     difficulty: 'easy' | 'medium' | 'hard';
-    prepTime: number;
-    cookTime: number;
+    prep_time: number;
+    cook_time: number;
     servings: number;
     instructions: string[];
-    dietaryTags: string[];
-    imageUrl: string | null;
+    dietary_tags: string[];
+    image_url: string | null;
     ingredients: {
         name: string;
         quantity: number;
@@ -24,23 +24,23 @@ export interface IRecipe extends Document {
         fats: number;
         fiber: number;
     };
-    userNotes: string | null;
+    user_notes: string | null;
     createdAt: Date;
     updatedAt: Date;
 }
 
 const RecipeSchema: Schema = new Schema({
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     name: { type: String, required: true },
     description: { type: String },
-    cuisineType: { type: String },
+    cuisine_type: { type: String },
     difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium' },
-    prepTime: { type: Number },
-    cookTime: { type: Number },
+    prep_time: { type: Number },
+    cook_time: { type: Number },
     servings: { type: Number, default: 4 },
     instructions: [{ type: String }],
-    dietaryTags: [{ type: String }],
-    imageUrl: { type: String, default: null },
+    dietary_tags: [{ type: String }],
+    image_url: { type: String, default: null },
     ingredients: [{
         name: { type: String, required: true },
         quantity: { type: Number, required: true },
@@ -53,7 +53,7 @@ const RecipeSchema: Schema = new Schema({
         fats: { type: Number },
         fiber: { type: Number }
     },
-    userNotes: { type: String, default: null },
+    user_notes: { type: String, default: null },
 }, {
     timestamps: true
 });

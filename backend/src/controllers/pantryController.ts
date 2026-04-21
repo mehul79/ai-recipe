@@ -4,7 +4,7 @@ import PantryItem from '../models/PantryItem';
 // Get all pantry items
 export const getPantryItems = async (req: any, res: Response): Promise<void> => {
     try {
-        const items = await PantryItem.find({ userId: req.userId }).sort({ createdAt: -1 });
+        const items = await PantryItem.find({ user_id: req.userId }).sort({ createdAt: -1 });
         res.status(200).json({ success: true, data: items });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Internal server error' });
@@ -16,7 +16,7 @@ export const addPantryItem = async (req: any, res: Response): Promise<void> => {
     try {
         const newItem = await PantryItem.create({
             ...req.body,
-            userId: req.userId
+            user_id: req.userId
         });
         res.status(201).json({ success: true, data: newItem });
     } catch (error) {
@@ -28,7 +28,7 @@ export const addPantryItem = async (req: any, res: Response): Promise<void> => {
 export const updatePantryItem = async (req: any, res: Response): Promise<void> => {
     try {
         const item = await PantryItem.findOneAndUpdate(
-            { _id: req.params.id, userId: req.userId },
+            { _id: req.params.id, user_id: req.userId },
             { ...req.body },
             { new: true }
         );
@@ -47,7 +47,7 @@ export const updatePantryItem = async (req: any, res: Response): Promise<void> =
 // Delete a pantry item
 export const deletePantryItem = async (req: any, res: Response): Promise<void> => {
     try {
-        const item = await PantryItem.findOneAndDelete({ _id: req.params.id, userId: req.userId });
+        const item = await PantryItem.findOneAndDelete({ _id: req.params.id, user_id: req.userId });
 
         if (!item) {
             res.status(404).json({ success: false, message: 'Item not found' });

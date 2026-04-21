@@ -1,19 +1,19 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IMealPlan extends Document {
-    userId: mongoose.Types.ObjectId;
-    recipeId: mongoose.Types.ObjectId;
-    mealDate: Date;
-    mealType: 'breakfast' | 'lunch' | 'dinner';
+    user_id: mongoose.Types.ObjectId;
+    recipe_id: mongoose.Types.ObjectId;
+    meal_date: Date;
+    meal_type: 'breakfast' | 'lunch' | 'dinner';
     createdAt: Date;
     updatedAt: Date;
 }
 
 const MealPlanSchema: Schema = new Schema({
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    recipeId: { type: Schema.Types.ObjectId, ref: 'Recipe', required: true },
-    mealDate: { type: Date, required: true },
-    mealType: { type: String, enum: ['breakfast', 'lunch', 'dinner'], required: true },
+    user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    recipe_id: { type: Schema.Types.ObjectId, ref: 'Recipe', required: true },
+    meal_date: { type: Date, required: true },
+    meal_type: { type: String, enum: ['breakfast', 'lunch', 'dinner'], required: true },
 }, {
     timestamps: true
 });

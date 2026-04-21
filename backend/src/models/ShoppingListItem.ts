@@ -1,25 +1,25 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IShoppingListItem extends Document {
-    userId: mongoose.Types.ObjectId;
-    ingredientName: string;
+    user_id: mongoose.Types.ObjectId;
+    ingredient_name: string;
     quantity: number;
     unit: string;
     category: string;
-    isChecked: boolean;
-    fromMealPlan: boolean;
+    is_checked: boolean;
+    from_meal_plan: boolean;
     createdAt: Date;
     updatedAt: Date;
 }
 
 const ShoppingListItemSchema: Schema = new Schema({
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    ingredientName: { type: String, required: true },
+    user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    ingredient_name: { type: String, required: true },
     quantity: { type: Number, required: true },
     unit: { type: String, required: true },
     category: { type: String, required: true },
-    isChecked: { type: Boolean, default: false },
-    fromMealPlan: { type: Boolean, default: false },
+    is_checked: { type: Boolean, default: false },
+    from_meal_plan: { type: Boolean, default: false },
 }, {
     timestamps: true
 });
