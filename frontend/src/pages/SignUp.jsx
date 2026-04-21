@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import useAuthStore from '../store/useAuthStore';
 import toast from 'react-hot-toast';
 import { ChefHat, Mail, Lock, User } from 'lucide-react';
 
@@ -8,13 +8,11 @@ const SignUp = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [loading, setLoading] = useState(false);
-    const { register } = useAuth();
+    const { register, loading } = useAuthStore();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
 
         const result = await register(name, email, password);
 
@@ -24,8 +22,6 @@ const SignUp = () => {
         } else {
             toast.error(result.message);
         }
-
-        setLoading(false);
     };
 
     return (

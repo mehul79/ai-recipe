@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import Preference from '../models/Preference';
+import Preference from '../models/Preference.js';
 
 // Get Preferences
 export const getPreferences = async (req: any, res: Response): Promise<void> => {

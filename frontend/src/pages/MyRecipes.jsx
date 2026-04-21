@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom';
 import { Search, Clock, ChefHat, Trash2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
-import { dummyRecipes } from '../data/dummyData';
+import useRecipeStore from '../store/useRecipeStore';
 
 const MyRecipes = () => {
-    const [recipes, setRecipes] = useState([]);
+    const { recipes, loading, fetchRecipes, deleteRecipe } = useRecipeStore();
     const [filteredRecipes, setFilteredRecipes] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCuisine, setSelectedCuisine] = useState('All');
@@ -16,13 +16,8 @@ const MyRecipes = () => {
     const difficulties = ['All', 'easy', 'medium', 'hard'];
 
     useEffect(() => {
-        // Load dummy recipes
-        setRecipes(dummyRecipes);
-    }, []);
-
-    useEffect(() => {
-        filterRecipes();
-    }, [recipes, searchQuery, selectedCuisine, selectedDifficulty]);
+        fetchRecipes();
+    }, [fetchRecipes]);
 
     const filterRecipes = () => {
         let filtered = recipes;
@@ -45,12 +40,19 @@ const MyRecipes = () => {
         setFilteredRecipes(filtered);
     };
 
-    const handleDelete = (id) => {
+    useEffect(() => {
+        filterRecipes();
+    }, [recipes, searchQuery, selectedCuisine, selectedDifficulty]);
+
+    const handleDelete = async (id) => {
         if (!confirm('Are you sure you want to delete this recipe?')) return;
 
-        // UI-only delete
-        setRecipes(recipes.filter(recipe => recipe.id !== id));
-        toast.success('Recipe deleted');
+        const result = await deleteRecipe(id);
+        if (result.success) {
+            toast.success('Recipe deleted');
+        } else {
+            toast.error(result.message);
+        }
     };
 
     return (
@@ -115,11 +117,15 @@ const MyRecipes = () => {
                 </div>
 
                 {/* Recipes Grid */}
-                {filteredRecipes.length > 0 ? (
+                {loading ? (
+                    <div className="flex justify-center py-12">
+                        <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                ) : filteredRecipes.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredRecipes.map(recipe => (
                             <RecipeCard
-                                key={recipe.id}
+                                key={recipe._id}
                                 recipe={recipe}
                                 onDelete={handleDelete}
                             />
@@ -158,7 +164,7 @@ const RecipeCard = ({ recipe, onDelete }) => {
 
             {/* Recipe Content */}
             <div className="p-5">
-                <Link to={`/recipes/${recipe.id}`} className="block mb-3">
+                <Link to={`/recipes/${recipe._id}`} className="block mb-3">
                     <h3 className="font-semibold text-lg text-gray-900 group-hover:text-emerald-600 transition-colors line-clamp-2">
                         {recipe.name}
                     </h3>
@@ -195,21 +201,21 @@ const RecipeCard = ({ recipe, onDelete }) => {
                         <Clock className="w-4 h-4" />
                         <span>{totalTime} mins</span>
                     </div>
-                    {recipe.calories && (
-                        <span>{recipe.calories} cal</span>
+                    {recipe.nutrition?.calories && (
+                        <span>{recipe.nutrition.calories} cal</span>
                     )}
                 </div>
 
                 {/* Actions */}
                 <div className="flex gap-2 pt-4 border-t border-gray-100">
                     <Link
-                        to={`/recipes/${recipe.id}`}
+                        to={`/recipes/${recipe._id}`}
                         className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white text-center py-2 rounded-lg font-medium transition-colors text-sm"
                     >
                         View Recipe
                     </Link>
                     <button
-                        onClick={() => onDelete(recipe.id)}
+                        onClick={() => onDelete(recipe._id)}
                         className="px-3 py-2 border border-gray-300 text-gray-700 hover:bg-red-50 hover:border-red-300 hover:text-red-600 rounded-lg transition-colors"
                     >
                         <Trash2 className="w-4 h-4" />

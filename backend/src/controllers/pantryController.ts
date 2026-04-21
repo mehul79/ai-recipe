@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import PantryItem from '../models/PantryItem';
+import PantryItem from '../models/PantryItem.js';
 
 // Get all pantry items
 export const getPantryItems = async (req: any, res: Response): Promise<void> => {

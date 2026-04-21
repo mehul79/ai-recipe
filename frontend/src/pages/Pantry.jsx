@@ -3,12 +3,12 @@ import { Plus, Search, X, Calendar, AlertCircle } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
-import { dummyPantryItems, getExpiringItems } from '../data/dummyData';
+import usePantryStore from '../store/usePantryStore';
 
 const CATEGORIES = ['Vegetables', 'Fruits', 'Dairy', 'Meat', 'Grains', 'Spices', 'Other'];
 
 const Pantry = () => {
-    const [items, setItems] = useState([]);
+    const { items, loading, fetchItems, addItem, deleteItem, getExpiringItems } = usePantryStore();
     const [filteredItems, setFilteredItems] = useState([]);
     const [showAddModal, setShowAddModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -16,14 +16,12 @@ const Pantry = () => {
     const [expiringItems, setExpiringItems] = useState([]);
 
     useEffect(() => {
-        // Load dummy data
-        setItems(dummyPantryItems);
-        setExpiringItems(getExpiringItems());
-    }, []);
+        fetchItems();
+    }, [fetchItems]);
 
     useEffect(() => {
-        filterItems();
-    }, [items, searchQuery, selectedCategory]);
+        setExpiringItems(getExpiringItems());
+    }, [items, getExpiringItems]);
 
     const filterItems = () => {
         let filtered = items;
@@ -41,12 +39,19 @@ const Pantry = () => {
         setFilteredItems(filtered);
     };
 
-    const handleDelete = (id) => {
+    useEffect(() => {
+        filterItems();
+    }, [items, searchQuery, selectedCategory]);
+
+    const handleDelete = async (id) => {
         if (!confirm('Are you sure you want to delete this item?')) return;
 
-        // UI-only delete (no API call)
-        setItems(items.filter(item => item.id !== id));
-        toast.success('Item deleted');
+        const result = await deleteItem(id);
+        if (result.success) {
+            toast.success('Item deleted');
+        } else {
+            toast.error(result.message);
+        }
     };
 
     return (
@@ -119,14 +124,18 @@ const Pantry = () => {
                 </div>
 
                 {/* Items Grid */}
-                {filteredItems.length > 0 ? (
+                {loading ? (
+                    <div className="flex justify-center py-12">
+                        <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                ) : filteredItems.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {filteredItems.map(item => (
                             <PantryItemCard
-                                key={item.id}
+                                key={item._id}
                                 item={item}
                                 onDelete={handleDelete}
-                                isExpiring={expiringItems.some(exp => exp.id === item.id)}
+                                isExpiring={expiringItems.some(exp => exp._id === item._id)}
                             />
                         ))}
                     </div>
@@ -141,9 +150,8 @@ const Pantry = () => {
             {showAddModal && (
                 <AddItemModal
                     onClose={() => setShowAddModal(false)}
-                    onSuccess={(newItem) => {
-                        setItems([...items, newItem]);
-                        setExpiringItems(getExpiringItems());
+                    onSuccess={() => {
+                        setShowAddModal(false);
                     }}
                 />
             )}
@@ -175,7 +183,7 @@ const PantryItemCard = ({ item, onDelete, isExpiring }) => {
                     <p className="text-sm text-gray-500 capitalize">{item.category}</p>
                 </div>
                 <button
-                    onClick={() => onDelete(item.id)}
+                    onClick={() => onDelete(item._id)}
                     className="text-gray-400 hover:text-red-500 transition-colors"
                 >
                     <X className="w-5 h-5" />
@@ -210,6 +218,7 @@ const PantryItemCard = ({ item, onDelete, isExpiring }) => {
 };
 
 const AddItemModal = ({ onClose, onSuccess }) => {
+    const addItem = usePantryStore((state) => state.addItem);
     const [formData, setFormData] = useState({
         name: '',
         quantity: '',
@@ -220,22 +229,24 @@ const AddItemModal = ({ onClose, onSuccess }) => {
     });
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
 
-        // UI-only add (no API call)
-        const newItem = {
-            id: Date.now(),
-            user_id: 1,
+        const itemData = {
             ...formData,
             quantity: parseFloat(formData.quantity),
-            expiry_date: formData.expiry_date || null,
-            created_at: new Date().toISOString()
+            expiry_date: formData.expiry_date || null
         };
 
-        toast.success('Item added to pantry');
-        onSuccess(newItem);
-        onClose();
+        const result = await addItem(itemData);
+        if (result.success) {
+            toast.success('Item added to pantry');
+            onSuccess();
+        } else {
+            toast.error(result.message);
+        }
+        setLoading(false);
     };
 
     return (

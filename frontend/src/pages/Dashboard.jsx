@@ -1,28 +1,30 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import { ChefHat, UtensilsCrossed, Calendar, ShoppingCart, TrendingUp, Clock } from 'lucide-react';
-import { dummyStats, getRecentRecipes, getUpcomingMeals } from '../data/dummyData';
+import { ChefHat, UtensilsCrossed, Calendar, Clock } from 'lucide-react';
+import usePantryStore from '../store/usePantryStore';
+import useRecipeStore from '../store/useRecipeStore';
+import useMealPlanStore from '../store/useMealPlanStore';
 
 const Dashboard = () => {
-    const [stats, setStats] = useState({
-        totalRecipes: 0,
-        pantryItems: 0,
-        mealsThisWeek: 0
-    });
-    const [recentRecipes, setRecentRecipes] = useState([]);
-    const [upcomingMeals, setUpcomingMeals] = useState([]);
+    const { items: pantryItems, fetchItems: fetchPantry } = usePantryStore();
+    const { recipes, fetchRecipes } = useRecipeStore();
+    const { mealPlans, fetchMealPlans } = useMealPlanStore();
 
     useEffect(() => {
-        // Load dummy data
-        setStats({
-            totalRecipes: dummyStats.recipes.total_recipes,
-            pantryItems: dummyStats.pantry.total_items,
-            mealsThisWeek: dummyStats.mealPlans.this_week_count
-        });
-        setRecentRecipes(getRecentRecipes(5));
-        setUpcomingMeals(getUpcomingMeals(5));
-    }, []);
+        fetchPantry();
+        fetchRecipes();
+        fetchMealPlans();
+    }, [fetchPantry, fetchRecipes, fetchMealPlans]);
+
+    const stats = {
+        totalRecipes: recipes.length,
+        pantryItems: pantryItems.length,
+        mealsPlanned: mealPlans.length
+    };
+
+    const recentRecipes = recipes.slice(0, 5);
+    const upcomingMeals = mealPlans.slice(0, 5);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -51,8 +53,8 @@ const Dashboard = () => {
                     />
                     <StatCard
                         icon={<Calendar className="w-6 h-6" />}
-                        label="Meals This Week"
-                        value={stats.mealsThisWeek}
+                        label="Meals Planned"
+                        value={stats.mealsPlanned}
                         color="purple"
                     />
                 </div>
@@ -105,8 +107,8 @@ const Dashboard = () => {
                             <div className="space-y-3">
                                 {recentRecipes.map((recipe) => (
                                     <Link
-                                        key={recipe.id}
-                                        to={`/recipes/${recipe.id}`}
+                                        key={recipe._id}
+                                        to={`/recipes/${recipe._id}`}
                                         className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
                                     >
                                         <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
@@ -140,14 +142,16 @@ const Dashboard = () => {
                             <div className="space-y-3">
                                 {upcomingMeals.map((meal) => (
                                     <div
-                                        key={meal.id}
+                                        key={meal._id}
                                         className="flex items-center gap-3 p-3 rounded-lg border border-gray-100"
                                     >
                                         <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                                             <Calendar className="w-6 h-6 text-purple-600" />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="font-medium text-gray-900 truncate">{meal.recipe_name}</h3>
+                                            <h3 className="font-medium text-gray-900 truncate">
+                                                {meal.recipe_id?.name || 'Unknown Recipe'}
+                                            </h3>
                                             <p className="text-sm text-gray-500 capitalize">{meal.meal_type}</p>
                                         </div>
                                     </div>

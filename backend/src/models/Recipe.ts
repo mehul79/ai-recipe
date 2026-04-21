@@ -24,6 +24,7 @@ export interface IRecipe extends Document {
         fats: number;
         fiber: number;
     };
+    cooking_tips: string[];
     user_notes: string | null;
     createdAt: Date;
     updatedAt: Date;
@@ -53,6 +54,7 @@ const RecipeSchema: Schema = new Schema({
         fats: { type: Number },
         fiber: { type: Number }
     },
+    cooking_tips: [{ type: String }],
     user_notes: { type: String, default: null },
 }, {
     timestamps: true

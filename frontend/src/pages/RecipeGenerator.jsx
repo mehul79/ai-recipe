@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { ChefHat, Sparkles, Plus, X, Clock, Users } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
-import { dummyPreferences, dummyGeneratedRecipe } from '../data/dummyData';
+import useRecipeStore from '../store/useRecipeStore';
+import usePantryStore from '../store/usePantryStore';
+import api from '../services/api';
 
 const CUISINES = ['Any', 'Italian', 'Mexican', 'Indian', 'Chinese', 'Japanese', 'Thai', 'French', 'Mediterranean', 'American'];
 const DIETARY_OPTIONS = ['Vegetarian', 'Vegan', 'Gluten-Free', 'Dairy-Free', 'Keto', 'Paleo'];
@@ -13,6 +15,7 @@ const COOKING_TIMES = [
 ];
 
 const RecipeGenerator = () => {
+    const { generateRecipe, generating, generatedRecipe, saveRecipe, clearGeneratedRecipe } = useRecipeStore();
     const [ingredients, setIngredients] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [usePantry, setUsePantry] = useState(false);
@@ -20,24 +23,24 @@ const RecipeGenerator = () => {
     const [dietaryRestrictions, setDietaryRestrictions] = useState([]);
     const [servings, setServings] = useState(4);
     const [cookingTime, setCookingTime] = useState('medium');
-    const [generating, setGenerating] = useState(false);
-    const [generatedRecipe, setGeneratedRecipe] = useState(null);
     const [saving, setSaving] = useState(false);
-    const [preferencesLoaded, setPreferencesLoaded] = useState(false);
 
     // Load user preferences on component mount
     useEffect(() => {
-        // Load dummy preferences
-        if (dummyPreferences.dietary_restrictions && dummyPreferences.dietary_restrictions.length > 0) {
-            setDietaryRestrictions(dummyPreferences.dietary_restrictions);
-        }
-        if (dummyPreferences.preferred_cuisines && dummyPreferences.preferred_cuisines.length > 0) {
-            setCuisineType(dummyPreferences.preferred_cuisines[0]);
-        }
-        if (dummyPreferences.default_servings) {
-            setServings(dummyPreferences.default_servings);
-        }
-    }, []);
+        const fetchPreferences = async () => {
+            try {
+                const response = await api.get('/preferences');
+                const prefs = response.data.data;
+                if (prefs.dietary_restrictions) setDietaryRestrictions(prefs.dietary_restrictions);
+                if (prefs.preferred_cuisines?.length > 0) setCuisineType(prefs.preferred_cuisines[0]);
+                if (prefs.default_servings) setServings(prefs.default_servings);
+            } catch (error) {
+                console.error('Failed to load preferences');
+            }
+        };
+        fetchPreferences();
+        return () => clearGeneratedRecipe();
+    }, [clearGeneratedRecipe]);
 
     const addIngredient = () => {
         if (inputValue.trim() && !ingredients.includes(inputValue.trim())) {
@@ -58,28 +61,39 @@ const RecipeGenerator = () => {
         }
     };
 
-    const handleGenerate = () => {
+    const handleGenerate = async () => {
         if (!usePantry && ingredients.length === 0) {
             toast.error('Please add at least one ingredient or use pantry items');
             return;
         }
 
-        setGenerating(true);
-        setGeneratedRecipe(null);
+        const result = await generateRecipe({
+            ingredients,
+            usePantry,
+            cuisine_type: cuisineType,
+            dietary_restrictions: dietaryRestrictions,
+            servings,
+            cooking_time: cookingTime
+        });
 
-        // Simulate API delay
-        setTimeout(() => {
-            setGeneratedRecipe(dummyGeneratedRecipe);
+        if (result.success) {
             toast.success('Recipe generated successfully!');
-            setGenerating(false);
-        }, 1500);
+        } else {
+            toast.error(result.message);
+        }
     };
 
-    const handleSaveRecipe = () => {
+    const handleSaveRecipe = async () => {
         if (!generatedRecipe) return;
+        setSaving(true);
 
-        // UI-only save (no API call)
-        toast.success('Recipe saved to your collection!');
+        const result = await saveRecipe(generatedRecipe);
+        if (result.success) {
+            toast.success('Recipe saved to your collection!');
+        } else {
+            toast.error(result.message);
+        }
+        setSaving(false);
     };
 
     return (
@@ -262,12 +276,12 @@ const RecipeGenerator = () => {
 
                                     <div className="flex flex-wrap gap-2 mt-4">
                                         <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
-                                            {generatedRecipe.cuisineType}
+                                            {generatedRecipe.cuisine_type}
                                         </span>
                                         <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium capitalize">
                                             {generatedRecipe.difficulty}
                                         </span>
-                                        {generatedRecipe.dietaryTags?.map(tag => (
+                                        {generatedRecipe.dietary_tags?.map(tag => (
                                             <span key={tag} className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
                                                 {tag}
                                             </span>
@@ -277,7 +291,7 @@ const RecipeGenerator = () => {
                                     <div className="flex items-center gap-6 mt-4 text-sm text-gray-600">
                                         <div className="flex items-center gap-2">
                                             <Clock className="w-4 h-4" />
-                                            <span>{generatedRecipe.prepTime + generatedRecipe.cookTime} mins</span>
+                                            <span>{(generatedRecipe.prep_time || 0) + (generatedRecipe.cook_time || 0)} mins</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Users className="w-4 h-4" />
@@ -329,11 +343,11 @@ const RecipeGenerator = () => {
                                 )}
 
                                 {/* Cooking Tips */}
-                                {generatedRecipe.cookingTips && generatedRecipe.cookingTips.length > 0 && (
+                                {generatedRecipe.cooking_tips && generatedRecipe.cooking_tips.length > 0 && (
                                     <div className="bg-emerald-50 rounded-lg p-4">
                                         <h3 className="font-semibold text-emerald-900 mb-2">💡 Cooking Tips</h3>
                                         <ul className="space-y-1">
-                                            {generatedRecipe.cookingTips.map((tip, index) => (
+                                            {generatedRecipe.cooking_tips.map((tip, index) => (
                                                 <li key={index} className="text-sm text-emerald-800">• {tip}</li>
                                             ))}
                                         </ul>
@@ -348,12 +362,6 @@ const RecipeGenerator = () => {
                                         className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-medium py-2.5 rounded-lg transition-colors disabled:opacity-50"
                                     >
                                         {saving ? 'Saving...' : 'Save Recipe'}
-                                    </button>
-                                    <button
-                                        onClick={() => setGeneratedRecipe(null)}
-                                        className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
-                                    >
-                                        New Recipe
                                     </button>
                                 </div>
                             </div>

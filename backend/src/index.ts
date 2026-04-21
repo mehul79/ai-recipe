@@ -1,7 +1,9 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
-import dotenv from 'dotenv';
 
 import authRoutes from './routes/authRoutes.js';
 import pantryRoutes from './routes/pantryRoutes.js';
@@ -9,9 +11,6 @@ import preferenceRoutes from './routes/preferenceRoutes.js';
 import recipeRoutes from './routes/recipeRoutes.js';
 import mealPlanRoutes from './routes/mealPlanRoutes.js';
 import shoppingListRoutes from './routes/shoppingListRoutes.js';
-
-// Load environment variables
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -43,12 +42,7 @@ mongoose.connect(MONGODB_URI)
         });
     })
     .catch((error) => {
-        console.error('MongoDB connection error haha:', error);
+        console.error('MongoDB connection error:', error);
     });
-
-
-app.listen(8000, () => {
-  console.log("running at 8000");
-})
 
 export default app;

@@ -1,19 +1,17 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import useAuthStore from '../store/useAuthStore';
 import toast from 'react-hot-toast';
 import { ChefHat, Mail, Lock } from 'lucide-react';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [loading, setLoading] = useState(false);
-    const { login } = useAuth();
+    const { login, loading } = useAuthStore();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
 
         const result = await login(email, password);
 
@@ -23,8 +21,6 @@ const Login = () => {
         } else {
             toast.error(result.message);
         }
-
-        setLoading(false);
     };
 
     return (

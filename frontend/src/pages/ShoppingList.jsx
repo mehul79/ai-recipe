@@ -1,65 +1,48 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ShoppingCart, Plus, X, Check, Trash2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
-import { dummyShoppingListItems } from '../data/dummyData';
+import useShoppingStore from '../store/useShoppingStore';
 
 const CATEGORIES = ['Produce', 'Dairy', 'Meat', 'Grains', 'Spices', 'Beverages', 'Other'];
 
 const ShoppingList = () => {
-    const [items, setItems] = useState([]);
-    const [groupedItems, setGroupedItems] = useState({});
+    const { items, loading, fetchItems, addItem, updateItem, deleteItem, syncPantry } = useShoppingStore();
     const [showAddModal, setShowAddModal] = useState(false);
 
     useEffect(() => {
-        loadShoppingList();
-    }, []);
+        fetchItems();
+    }, [fetchItems]);
 
-    const loadShoppingList = () => {
-        setItems(dummyShoppingListItems);
-        organizeByCategory(dummyShoppingListItems);
-    };
-
-    const organizeByCategory = (itemsList) => {
+    const groupedItems = useMemo(() => {
         const grouped = {};
-        itemsList.forEach(item => {
+        items.forEach(item => {
             const category = item.category || 'Other';
             if (!grouped[category]) {
                 grouped[category] = [];
             }
             grouped[category].push(item);
         });
-        setGroupedItems(grouped);
+        return grouped;
+    }, [items]);
+
+    const handleToggleChecked = async (id, currentStatus) => {
+        const result = await updateItem(id, { is_checked: !currentStatus });
+        if (!result.success) {
+            toast.error(result.message);
+        }
     };
 
-    const handleToggleChecked = (id) => {
-        // UI-only toggle
-        const updatedItems = items.map(item =>
-            item.id === id ? { ...item, is_checked: !item.is_checked } : item
-        );
-        setItems(updatedItems);
-        organizeByCategory(updatedItems);
+    const handleDeleteItem = async (id) => {
+        const result = await deleteItem(id);
+        if (result.success) {
+            toast.success('Item removed');
+        } else {
+            toast.error(result.message);
+        }
     };
 
-    const handleDeleteItem = (id) => {
-        // UI-only delete
-        const updatedItems = items.filter(item => item.id !== id);
-        setItems(updatedItems);
-        organizeByCategory(updatedItems);
-        toast.success('Item removed');
-    };
-
-    const handleClearChecked = () => {
-        if (!confirm('Remove all checked items?')) return;
-
-        // UI-only clear
-        const updatedItems = items.filter(item => !item.is_checked);
-        setItems(updatedItems);
-        organizeByCategory(updatedItems);
-        toast.success('Checked items cleared');
-    };
-
-    const handleAddToPantry = () => {
+    const handleSyncPantry = async () => {
         const checkedCount = items.filter(item => item.is_checked).length;
         if (checkedCount === 0) {
             toast.error('No items checked');
@@ -68,11 +51,12 @@ const ShoppingList = () => {
 
         if (!confirm(`Add ${checkedCount} checked items to pantry?`)) return;
 
-        // UI-only add to pantry
-        const updatedItems = items.filter(item => !item.is_checked);
-        setItems(updatedItems);
-        organizeByCategory(updatedItems);
-        toast.success('Items added to pantry');
+        const result = await syncPantry();
+        if (result.success) {
+            toast.success('Items added to pantry');
+        } else {
+            toast.error(result.message);
+        }
     };
 
     const checkedCount = items.filter(item => item.is_checked).length;
@@ -92,38 +76,33 @@ const ShoppingList = () => {
                 </div>
 
                 {/* Actions */}
-                {totalCount > 0 && (
-                    <div className="flex flex-wrap gap-3 mb-6">
-                        <button
-                            onClick={() => setShowAddModal(true)}
-                            className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-lg font-medium transition-colors"
-                        >
-                            <Plus className="w-5 h-5" />
-                            Add Item
-                        </button>
-                        {checkedCount > 0 && (
-                            <>
-                                <button
-                                    onClick={handleAddToPantry}
-                                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-lg font-medium transition-colors"
-                                >
-                                    <ShoppingCart className="w-5 h-5" />
-                                    Add to Pantry ({checkedCount})
-                                </button>
-                                <button
-                                    onClick={handleClearChecked}
-                                    className="flex items-center gap-2 border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2.5 rounded-lg font-medium transition-colors"
-                                >
-                                    <Trash2 className="w-5 h-5" />
-                                    Clear Checked
-                                </button>
-                            </>
-                        )}
-                    </div>
-                )}
+                <div className="flex flex-wrap gap-3 mb-6">
+                    <button
+                        onClick={() => setShowAddModal(true)}
+                        className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-lg font-medium transition-colors"
+                    >
+                        <Plus className="w-5 h-5" />
+                        Add Item
+                    </button>
+                    {checkedCount > 0 && (
+                        <>
+                            <button
+                                onClick={handleSyncPantry}
+                                className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-lg font-medium transition-colors"
+                            >
+                                <ShoppingCart className="w-5 h-5" />
+                                Sync to Pantry ({checkedCount})
+                            </button>
+                        </>
+                    )}
+                </div>
 
                 {/* Shopping List */}
-                {totalCount > 0 ? (
+                {loading ? (
+                    <div className="flex justify-center py-12">
+                        <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                ) : totalCount > 0 ? (
                     <div className="space-y-6">
                         {Object.entries(groupedItems).map(([category, categoryItems]) => (
                             <div key={category} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -133,10 +112,10 @@ const ShoppingList = () => {
                                 <div className="divide-y divide-gray-100">
                                     {categoryItems.map(item => (
                                         <ShoppingListItem
-                                            key={item.id}
+                                            key={item._id}
                                             item={item}
-                                            onToggle={handleToggleChecked}
-                                            onDelete={handleDeleteItem}
+                                            onToggle={() => handleToggleChecked(item._id, item.is_checked)}
+                                            onDelete={() => handleDeleteItem(item._id)}
                                         />
                                     ))}
                                 </div>
@@ -162,11 +141,7 @@ const ShoppingList = () => {
             {showAddModal && (
                 <AddItemModal
                     onClose={() => setShowAddModal(false)}
-                    onSuccess={(newItem) => {
-                        // Add to local state
-                        const updatedItems = [...items, newItem];
-                        setItems(updatedItems);
-                        organizeByCategory(updatedItems);
+                    onSuccess={() => {
                         setShowAddModal(false);
                     }}
                 />
@@ -179,7 +154,7 @@ const ShoppingListItem = ({ item, onToggle, onDelete }) => {
     return (
         <div className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors group">
             <button
-                onClick={() => onToggle(item.id)}
+                onClick={onToggle}
                 className="shrink-0"
             >
                 <div className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-all ${item.is_checked
@@ -203,7 +178,7 @@ const ShoppingListItem = ({ item, onToggle, onDelete }) => {
             </div>
 
             <button
-                onClick={() => onDelete(item.id)}
+                onClick={onDelete}
                 className="shrink-0 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
             >
                 <X className="w-5 h-5" />
@@ -213,6 +188,7 @@ const ShoppingListItem = ({ item, onToggle, onDelete }) => {
 };
 
 const AddItemModal = ({ onClose, onSuccess }) => {
+    const addItem = useShoppingStore((state) => state.addItem);
     const [formData, setFormData] = useState({
         ingredient_name: '',
         quantity: '',
@@ -221,24 +197,25 @@ const AddItemModal = ({ onClose, onSuccess }) => {
     });
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
 
-        // UI-only add
         const newItem = {
-            id: Date.now(),
             ingredient_name: formData.ingredient_name,
             quantity: parseFloat(formData.quantity),
             unit: formData.unit,
-            category: formData.category,
-            is_checked: false,
-            from_meal_plan: false,
-            created_at: new Date().toISOString()
+            category: formData.category
         };
 
-        toast.success('Item added to shopping list');
-        onSuccess(newItem);
-        onClose();
+        const result = await addItem(newItem);
+        if (result.success) {
+            toast.success('Item added to shopping list');
+            onSuccess();
+        } else {
+            toast.error(result.message);
+        }
+        setLoading(false);
     };
 
     return (

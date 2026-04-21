@@ -1,6 +1,6 @@
 import { Response } from 'express';
-import MealPlan from '../models/MealPlan';
-import Recipe from '../models/Recipe';
+import MealPlan from '../models/MealPlan.js';
+import Recipe from '../models/Recipe.js';
 
 // Get meal plans
 export const getMealPlans = async (req: any, res: Response): Promise<void> => {

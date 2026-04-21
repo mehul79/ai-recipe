@@ -1,9 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import useAuthStore from '../store/useAuthStore';
 import { ChefHat, Home, UtensilsCrossed, Calendar, ShoppingCart, Settings, LogOut } from 'lucide-react';
 
 const Navbar = () => {
-    const { user, logout } = useAuth();
+    const { logout } = useAuthStore();
     const navigate = useNavigate();
 
     const handleLogout = () => {

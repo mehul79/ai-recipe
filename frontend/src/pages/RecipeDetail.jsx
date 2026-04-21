@@ -3,36 +3,43 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Clock, Users, ChefHat, ArrowLeft, Trash2, Calendar } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
-import { getRecipeById } from '../data/dummyData';
+import useRecipeStore from '../store/useRecipeStore';
 
 const RecipeDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { getRecipeById, deleteRecipe } = useRecipeStore();
     const [recipe, setRecipe] = useState(null);
+    const [loading, setLoading] = useState(true);
     const [servings, setServings] = useState(4);
     const [checkedIngredients, setCheckedIngredients] = useState(new Set());
 
     useEffect(() => {
+        const loadRecipe = async () => {
+            setLoading(true);
+            const recipeData = await getRecipeById(id);
+            if (recipeData) {
+                setRecipe(recipeData);
+                setServings(recipeData.servings || 4);
+            } else {
+                toast.error('Recipe not found');
+                navigate('/recipes');
+            }
+            setLoading(false);
+        };
         loadRecipe();
-    }, [id]);
+    }, [id, getRecipeById, navigate]);
 
-    const loadRecipe = () => {
-        const recipeData = getRecipeById(parseInt(id));
-        if (recipeData) {
-            setRecipe(recipeData);
-            setServings(recipeData.servings || 4);
-        } else {
-            toast.error('Recipe not found');
-            navigate('/recipes');
-        }
-    };
-
-    const handleDelete = () => {
+    const handleDelete = async () => {
         if (!confirm('Are you sure you want to delete this recipe?')) return;
 
-        // UI-only delete
-        toast.success('Recipe deleted');
-        navigate('/recipes');
+        const result = await deleteRecipe(id);
+        if (result.success) {
+            toast.success('Recipe deleted');
+            navigate('/recipes');
+        } else {
+            toast.error(result.message);
+        }
     };
 
     const toggleIngredient = (index) => {

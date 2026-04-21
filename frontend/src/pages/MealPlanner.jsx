@@ -3,60 +3,54 @@ import { Calendar as CalendarIcon, Plus, X, ChefHat } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
 import { format, startOfWeek, addDays } from 'date-fns';
-import { dummyMealPlans, dummyRecipes } from '../data/dummyData';
+import useMealPlanStore from '../store/useMealPlanStore';
+import useRecipeStore from '../store/useRecipeStore';
 
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner'];
 const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const MealPlanner = () => {
     const [weekStart, setWeekStart] = useState(startOfWeek(new Date()));
-    const [mealPlan, setMealPlan] = useState({});
-    const [recipes, setRecipes] = useState([]);
+    const { mealPlans, loading, fetchMealPlans, addMealPlan, deleteMealPlan } = useMealPlanStore();
+    const { recipes, fetchRecipes } = useRecipeStore();
     const [showAddModal, setShowAddModal] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState(null);
 
     useEffect(() => {
-        loadMealPlan();
-        setRecipes(dummyRecipes);
-    }, [weekStart]);
+        const startDate = format(weekStart, 'yyyy-MM-dd');
+        const endDate = format(addDays(weekStart, 6), 'yyyy-MM-dd');
+        fetchMealPlans(startDate, endDate);
+        fetchRecipes();
+    }, [weekStart, fetchMealPlans, fetchRecipes]);
 
-    const loadMealPlan = () => {
-        // Organize dummy meals by date and meal type
-        const organized = {};
-        dummyMealPlans.forEach(meal => {
-            const dateKey = meal.meal_date;
-            if (!organized[dateKey]) {
-                organized[dateKey] = {};
-            }
-            organized[dateKey][meal.meal_type] = meal;
-        });
-        setMealPlan(organized);
-    };
+    const organizedPlan = {};
+    mealPlans.forEach(meal => {
+        const dateKey = format(new Date(meal.meal_date), 'yyyy-MM-dd');
+        if (!organizedPlan[dateKey]) {
+            organizedPlan[dateKey] = {};
+        }
+        organizedPlan[dateKey][meal.meal_type] = meal;
+    });
 
     const handleAddMeal = (date, mealType) => {
         setSelectedSlot({ date, mealType });
         setShowAddModal(true);
     };
 
-    const handleRemoveMeal = (mealId) => {
+    const handleRemoveMeal = async (mealId) => {
         if (!confirm('Remove this meal from your plan?')) return;
 
-        // UI-only remove
-        const updatedPlan = { ...mealPlan };
-        Object.keys(updatedPlan).forEach(date => {
-            Object.keys(updatedPlan[date]).forEach(type => {
-                if (updatedPlan[date][type].id === mealId) {
-                    delete updatedPlan[date][type];
-                }
-            });
-        });
-        setMealPlan(updatedPlan);
-        toast.success('Meal removed');
+        const result = await deleteMealPlan(mealId);
+        if (result.success) {
+            toast.success('Meal removed');
+        } else {
+            toast.error(result.message);
+        }
     };
 
     const getDayMeals = (dayIndex) => {
         const date = format(addDays(weekStart, dayIndex), 'yyyy-MM-dd');
-        return mealPlan[date] || {};
+        return organizedPlan[date] || {};
     };
 
     return (
@@ -141,10 +135,10 @@ const MealPlanner = () => {
                                             <div className="relative group">
                                                 <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
                                                     <p className="text-sm font-medium text-emerald-900 line-clamp-2">
-                                                        {meal.recipe_name}
+                                                        {meal.recipe_id?.name || 'Unknown Recipe'}
                                                     </p>
                                                     <button
-                                                        onClick={() => handleRemoveMeal(meal.id)}
+                                                        onClick={() => handleRemoveMeal(meal._id)}
                                                         className="absolute top-1 right-1 p-1 bg-white rounded hover:bg-red-50 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
                                                     >
                                                         <X className="w-4 h-4" />
@@ -171,7 +165,7 @@ const MealPlanner = () => {
                     <div className="bg-white rounded-lg border border-gray-200 p-4">
                         <p className="text-sm text-gray-600">Meals Planned</p>
                         <p className="text-2xl font-bold text-gray-900">
-                            {Object.values(mealPlan).reduce((acc, day) => acc + Object.keys(day).length, 0)}
+                            {mealPlans.length}
                         </p>
                     </div>
                     <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -197,15 +191,7 @@ const MealPlanner = () => {
                         setShowAddModal(false);
                         setSelectedSlot(null);
                     }}
-                    onSuccess={(newMeal) => {
-                        // Add to local state
-                        const updatedPlan = { ...mealPlan };
-                        const date = selectedSlot.date;
-                        if (!updatedPlan[date]) {
-                            updatedPlan[date] = {};
-                        }
-                        updatedPlan[date][selectedSlot.mealType] = newMeal;
-                        setMealPlan(updatedPlan);
+                    onSuccess={() => {
                         setShowAddModal(false);
                         setSelectedSlot(null);
                     }}
@@ -216,6 +202,7 @@ const MealPlanner = () => {
 };
 
 const AddMealModal = ({ date, mealType, recipes, onClose, onSuccess }) => {
+    const addMealPlan = useMealPlanStore((state) => state.addMealPlan);
     const [selectedRecipe, setSelectedRecipe] = useState('');
     const [loading, setLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -224,26 +211,27 @@ const AddMealModal = ({ date, mealType, recipes, onClose, onSuccess }) => {
         recipe.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!selectedRecipe) {
             toast.error('Please select a recipe');
             return;
         }
 
-        // UI-only add
-        const recipe = recipes.find(r => r.id == selectedRecipe);
-        const newMeal = {
-            id: Date.now(),
+        setLoading(true);
+        const result = await addMealPlan({
             recipe_id: selectedRecipe,
-            recipe_name: recipe.name,
             meal_date: date,
-            meal_type: mealType,
-            created_at: new Date().toISOString()
-        };
+            meal_type: mealType
+        });
 
-        toast.success('Meal added to plan');
-        onSuccess(newMeal);
+        if (result.success) {
+            toast.success('Meal added to plan');
+            onSuccess();
+        } else {
+            toast.error(result.message);
+        }
+        setLoading(false);
     };
 
     return (
@@ -278,8 +266,8 @@ const AddMealModal = ({ date, mealType, recipes, onClose, onSuccess }) => {
                         {filteredRecipes.length > 0 ? (
                             filteredRecipes.map(recipe => (
                                 <label
-                                    key={recipe.id}
-                                    className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${selectedRecipe === recipe.id
+                                    key={recipe._id}
+                                    className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${selectedRecipe === recipe._id
                                         ? 'border-emerald-500 bg-emerald-50'
                                         : 'border-gray-200 hover:bg-gray-50'
                                         }`}
@@ -287,8 +275,8 @@ const AddMealModal = ({ date, mealType, recipes, onClose, onSuccess }) => {
                                     <input
                                         type="radio"
                                         name="recipe"
-                                        value={recipe.id}
-                                        checked={selectedRecipe === recipe.id}
+                                        value={recipe._id}
+                                        checked={selectedRecipe === recipe._id}
                                         onChange={(e) => setSelectedRecipe(e.target.value)}
                                         className="w-4 h-4 text-emerald-500 border-gray-300 focus:ring-emerald-500"
                                     />
