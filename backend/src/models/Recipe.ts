@@ -4,6 +4,7 @@ export interface IRecipe extends Document {
     user_id: mongoose.Types.ObjectId;
     name: string;
     description: string;
+    recipe_type: string;
     cuisine_type: string;
     difficulty: 'easy' | 'medium' | 'hard';
     prep_time: number;
@@ -34,6 +35,7 @@ const RecipeSchema: Schema = new Schema({
     user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     name: { type: String, required: true },
     description: { type: String },
+    recipe_type: { type: String, default: 'complete meal' },
     cuisine_type: { type: String },
     difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium' },
     prep_time: { type: Number },

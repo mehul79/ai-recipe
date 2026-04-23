@@ -175,6 +175,11 @@ const RecipeCard = ({ recipe, onDelete }) => {
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-4">
+                    {recipe.recipe_type && (
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium capitalize">
+                            {recipe.recipe_type}
+                        </span>
+                    )}
                     {recipe.cuisine_type && (
                         <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs font-medium">
                             {recipe.cuisine_type}

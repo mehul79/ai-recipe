@@ -71,6 +71,20 @@ const useRecipeStore = create((set, get) => ({
         }
     },
 
+    getSubstitutions: async (ingredients) => {
+        try {
+            const response = await api.post('/recipes/substitutions', { ingredients });
+            return response.data.data;
+        } catch (error) {
+            console.error('Failed to fetch substitutions:', error);
+            return [];
+        }
+    },
+
+    updateGeneratedRecipe: (updatedRecipe) => {
+        set({ generatedRecipe: updatedRecipe });
+    },
+
     clearGeneratedRecipe: () => set({ generatedRecipe: null })
 }));
 

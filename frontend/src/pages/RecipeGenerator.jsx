@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import { ChefHat, Sparkles, Plus, X, Clock, Users } from 'lucide-react';
+import { ChefHat, Sparkles, Plus, X, Clock, AlertTriangle } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
 import useRecipeStore from '../store/useRecipeStore';
-import usePantryStore from '../store/usePantryStore';
-import api from '../services/api';
 
 const CUISINES = ['Any', 'Italian', 'Mexican', 'Indian', 'Chinese', 'Japanese', 'Thai', 'French', 'Mediterranean', 'American'];
 const DIETARY_OPTIONS = ['Vegetarian', 'Vegan', 'Gluten-Free', 'Dairy-Free', 'Keto', 'Paleo'];
@@ -13,38 +11,31 @@ const COOKING_TIMES = [
     { value: 'medium', label: 'Medium (30-60 min)' },
     { value: 'long', label: 'Long (>60 min)' }
 ];
+const RECIPE_TYPES = ['complete meal', 'snack', 'dessert', 'savory', 'shake'];
 
 const RecipeGenerator = () => {
-    const { generateRecipe, generating, generatedRecipe, saveRecipe, clearGeneratedRecipe } = useRecipeStore();
+    const { generateRecipe, generating, generatedRecipe, saveRecipe, clearGeneratedRecipe, updateGeneratedRecipe } = useRecipeStore();
     const [ingredients, setIngredients] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [usePantry, setUsePantry] = useState(false);
     const [cuisineType, setCuisineType] = useState('Any');
+    const [recipeType, setRecipeType] = useState('complete meal');
     const [dietaryRestrictions, setDietaryRestrictions] = useState([]);
-    const [servings, setServings] = useState(4);
     const [cookingTime, setCookingTime] = useState('medium');
     const [saving, setSaving] = useState(false);
+    const [substitutions, setSubstitutions] = useState({});
+    const [conflicts, setConflicts] = useState([]);
+    const [activeSubstitution, setActiveSubstitution] = useState(null);
 
-    // Load user preferences on component mount
     useEffect(() => {
-        const fetchPreferences = async () => {
-            try {
-                const response = await api.get('/preferences');
-                const prefs = response.data.data;
-                if (prefs.dietary_restrictions) setDietaryRestrictions(prefs.dietary_restrictions);
-                if (prefs.preferred_cuisines?.length > 0) setCuisineType(prefs.preferred_cuisines[0]);
-                if (prefs.default_servings) setServings(prefs.default_servings);
-            } catch (error) {
-                console.error('Failed to load preferences');
-            }
-        };
-        fetchPreferences();
         return () => clearGeneratedRecipe();
     }, [clearGeneratedRecipe]);
 
     const addIngredient = () => {
-        if (inputValue.trim() && !ingredients.includes(inputValue.trim())) {
-            setIngredients([...ingredients, inputValue.trim()]);
+        if (inputValue.trim()) {
+            if (!ingredients.includes(inputValue.trim().toLowerCase())) {
+                setIngredients([...ingredients, inputValue.trim().toLowerCase()]);
+            }
             setInputValue('');
         }
     };
@@ -55,7 +46,7 @@ const RecipeGenerator = () => {
 
     const toggleDietary = (option) => {
         if (dietaryRestrictions.includes(option)) {
-            setDietaryRestrictions(dietaryRestrictions.filter(d => d !== option));
+            setDietaryRestrictions(dietaryRestrictions.filter(r => r !== option));
         } else {
             setDietaryRestrictions([...dietaryRestrictions, option]);
         }
@@ -71,16 +62,34 @@ const RecipeGenerator = () => {
             ingredients,
             usePantry,
             cuisine_type: cuisineType,
+            recipe_type: recipeType,
             dietary_restrictions: dietaryRestrictions,
-            servings,
             cooking_time: cookingTime
         });
 
         if (result.success) {
             toast.success('Recipe generated successfully!');
+            setConflicts(result.conflicts || []);
+            setSubstitutions(result.substitutions || {});
         } else {
             toast.error(result.message);
         }
+    };
+
+    const handleSwapIngredient = (originalName, newName) => {
+        const updatedIngredients = generatedRecipe.ingredients.map(ing => {
+            if (ing.name.toLowerCase() === originalName.toLowerCase()) {
+                return { ...ing, name: newName };
+            }
+            return ing;
+        });
+
+        updateGeneratedRecipe({
+            ...generatedRecipe,
+            ingredients: updatedIngredients
+        });
+        setActiveSubstitution(null);
+        toast.success(`Swapped ${originalName} with ${newName}`);
     };
 
     const handleSaveRecipe = async () => {
@@ -173,6 +182,25 @@ const RecipeGenerator = () => {
                         <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
                             <h2 className="text-lg font-semibold text-gray-900">Preferences</h2>
 
+                            {/* Recipe Type */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Recipe Type</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {RECIPE_TYPES.map(type => (
+                                        <button
+                                            key={type}
+                                            onClick={() => setRecipeType(type)}
+                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors capitalize ${recipeType === type
+                                                ? 'bg-emerald-500 text-white'
+                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                }`}
+                                        >
+                                            {type}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
                             {/* Cuisine Type */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Cuisine Type</label>
@@ -203,25 +231,6 @@ const RecipeGenerator = () => {
                                             {option}
                                         </button>
                                     ))}
-                                </div>
-                            </div>
-
-                            {/* Servings */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Servings: {servings}
-                                </label>
-                                <input
-                                    type="range"
-                                    min="1"
-                                    max="12"
-                                    value={servings}
-                                    onChange={(e) => setServings(parseInt(e.target.value))}
-                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-                                />
-                                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                                    <span>1</span>
-                                    <span>12</span>
                                 </div>
                             </div>
 
@@ -275,10 +284,13 @@ const RecipeGenerator = () => {
                                     <p className="text-gray-600">{generatedRecipe.description}</p>
 
                                     <div className="flex flex-wrap gap-2 mt-4">
+                                        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium capitalize">
+                                            {generatedRecipe.recipe_type}
+                                        </span>
                                         <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
                                             {generatedRecipe.cuisine_type}
                                         </span>
-                                        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium capitalize">
+                                        <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium capitalize">
                                             {generatedRecipe.difficulty}
                                         </span>
                                         {generatedRecipe.dietary_tags?.map(tag => (
@@ -293,21 +305,68 @@ const RecipeGenerator = () => {
                                             <Clock className="w-4 h-4" />
                                             <span>{(generatedRecipe.prep_time || 0) + (generatedRecipe.cook_time || 0)} mins</span>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <Users className="w-4 h-4" />
-                                            <span>{generatedRecipe.servings} servings</span>
-                                        </div>
                                     </div>
                                 </div>
+
+                                {/* Allergy Conflict Warning */}
+                                {conflicts.length > 0 && (
+                                    <div className="bg-red-50 border border-red-100 rounded-lg p-4 space-y-2">
+                                        <div className="flex items-center gap-2 text-red-700 font-semibold">
+                                            <AlertTriangle className="w-5 h-5" />
+                                            <span>Allergy/Dietary Conflicts Detected</span>
+                                        </div>
+                                        <ul className="text-sm text-red-600 space-y-1">
+                                            {conflicts.map((conflict, idx) => (
+                                                <li key={idx}>
+                                                    • <strong>{conflict.ingredient}</strong> conflicts with your <strong>{conflict.reason}</strong> restriction.
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        <p className="text-xs text-red-500 italic">
+                                            Tip: Use the "Substitutes" button next to the ingredients below to find safe alternatives.
+                                        </p>
+                                    </div>
+                                )}
 
                                 {/* Ingredients */}
                                 <div>
                                     <h3 className="font-semibold text-gray-900 mb-3">Ingredients</h3>
-                                    <ul className="space-y-2">
+                                    <ul className="space-y-3">
                                         {generatedRecipe.ingredients?.map((ing, index) => (
-                                            <li key={index} className="flex items-center gap-2 text-gray-700">
-                                                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-                                                {ing.quantity} {ing.unit} {ing.name}
+                                            <li key={index} className="flex flex-col gap-2">
+                                                <div className="flex items-center justify-between group">
+                                                    <div className="flex items-center gap-2 text-gray-700">
+                                                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                                        {ing.quantity} {ing.unit} {ing.name}
+                                                    </div>
+                                                    {substitutions[ing.name.toLowerCase()] && (
+                                                        <button
+                                                            onClick={() => setActiveSubstitution(activeSubstitution === ing.name ? null : ing.name)}
+                                                            className="flex items-center gap-1 text-xs font-medium text-amber-600 hover:text-amber-700 bg-amber-50 px-2 py-1 rounded-md transition-colors"
+                                                        >
+                                                            <AlertTriangle className="w-3 h-3" />
+                                                            Substitutes
+                                                        </button>
+                                                    )}
+                                                </div>
+
+                                                {/* Substitution Panel */}
+                                                {activeSubstitution === ing.name && (
+                                                    <div className="ml-3.5 p-3 bg-gray-50 rounded-lg border border-gray-100 space-y-2">
+                                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Suggested Alternatives:</p>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {substitutions[ing.name.toLowerCase()].map(sub => (
+                                                                <button
+                                                                    key={sub}
+                                                                    onClick={() => handleSwapIngredient(ing.name, sub)}
+                                                                    className="px-2 py-1 bg-white border border-gray-200 rounded text-xs text-gray-700 hover:border-emerald-500 hover:text-emerald-600 transition-all"
+                                                                >
+                                                                    {sub}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </li>
                                         ))}
                                     </ul>

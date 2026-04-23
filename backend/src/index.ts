@@ -32,7 +32,7 @@ app.get('/api', (req: Request, res: Response) => {
 });
 
 // Database Connection
-const MONGODB_URI = process.env.MONGODB_URI || "";
+const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI || "";
 
 mongoose.connect(MONGODB_URI)
     .then(() => {

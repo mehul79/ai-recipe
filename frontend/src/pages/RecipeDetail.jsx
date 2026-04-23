@@ -1,26 +1,33 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Clock, Users, ChefHat, ArrowLeft, Trash2, Calendar } from 'lucide-react';
+import { Clock, Users, ChefHat, ArrowLeft, Trash2, Calendar, AlertTriangle } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
 import useRecipeStore from '../store/useRecipeStore';
+import api from '../services/api';
 
 const RecipeDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { getRecipeById, deleteRecipe } = useRecipeStore();
+    const { getRecipeById, deleteRecipe, getSubstitutions } = useRecipeStore();
     const [recipe, setRecipe] = useState(null);
     const [loading, setLoading] = useState(true);
     const [servings, setServings] = useState(4);
     const [checkedIngredients, setCheckedIngredients] = useState(new Set());
+    const [substitutions, setSubstitutions] = useState({});
+    const [conflicts, setConflicts] = useState([]);
+    const [activeSubstitution, setActiveSubstitution] = useState(null);
 
     useEffect(() => {
         const loadRecipe = async () => {
             setLoading(true);
-            const recipeData = await getRecipeById(id);
-            if (recipeData) {
+            const response = await api.get(`/recipes/${id}`);
+            if (response.data.success) {
+                const recipeData = response.data.data;
                 setRecipe(recipeData);
                 setServings(recipeData.servings || 4);
+                setConflicts(response.data.conflicts || []);
+                setSubstitutions(response.data.substitutions || {});
             } else {
                 toast.error('Recipe not found');
                 navigate('/recipes');
@@ -28,7 +35,7 @@ const RecipeDetail = () => {
             setLoading(false);
         };
         loadRecipe();
-    }, [id, getRecipeById, navigate]);
+    }, [id, navigate]);
 
     const handleDelete = async () => {
         if (!confirm('Are you sure you want to delete this recipe?')) return;
@@ -54,6 +61,26 @@ const RecipeDetail = () => {
 
     const adjustQuantity = (originalQty, originalServings) => {
         return ((originalQty * servings) / originalServings).toFixed(2);
+    };
+
+    const handleSwapIngredient = (originalName, newName) => {
+        const updatedIngredients = recipe.ingredients.map(ing => {
+            if (ing.name.toLowerCase() === originalName.toLowerCase()) {
+                return { ...ing, name: newName };
+            }
+            return ing;
+        });
+
+        setRecipe({
+            ...recipe,
+            ingredients: updatedIngredients
+        });
+
+        // Also update conflicts locally
+        setConflicts(conflicts.filter(c => c.ingredient.toLowerCase() !== originalName.toLowerCase()));
+        
+        setActiveSubstitution(null);
+        toast.success(`Swapped ${originalName} with ${newName}`);
     };
 
     if (!recipe) {
@@ -96,6 +123,11 @@ const RecipeDetail = () => {
 
                     {/* Tags */}
                     <div className="flex flex-wrap gap-2 mb-6">
+                        {recipe.recipe_type && (
+                            <span className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-medium capitalize">
+                                {recipe.recipe_type}
+                            </span>
+                        )}
                         {recipe.cuisine_type && (
                             <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
                                 {recipe.cuisine_type}
@@ -134,6 +166,29 @@ const RecipeDetail = () => {
                         )}
                     </div>
                 </div>
+
+                {/* Allergy Conflict Warning */}
+                {conflicts.length > 0 && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-6">
+                        <div className="flex items-center gap-3 text-red-700 font-bold mb-2">
+                            <AlertTriangle className="w-6 h-6" />
+                            <h2 className="text-lg">Dietary Conflicts Detected</h2>
+                        </div>
+                        <ul className="text-red-600 space-y-2">
+                            {conflicts.map((conflict, idx) => (
+                                <li key={idx} className="flex items-start gap-2">
+                                    <span className="mt-1.5 w-1.5 h-1.5 bg-red-400 rounded-full shrink-0"></span>
+                                    <span>
+                                        This recipe contains <strong>{conflict.ingredient}</strong>, which conflicts with your <strong>{conflict.reason}</strong> setting.
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                        <p className="mt-4 text-sm text-red-500 italic">
+                            You can swap these ingredients for safe alternatives in the ingredients panel below.
+                        </p>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Ingredients Section */}
@@ -177,26 +232,64 @@ const RecipeDetail = () => {
                             </div>
 
                             {/* Ingredients List */}
-                            <div className="space-y-3">
+                            <div className="space-y-4">
                                 {recipe.ingredients && recipe.ingredients.map((ingredient, index) => {
                                     const adjustedQty = adjustQuantity(ingredient.quantity, originalServings);
                                     const isChecked = checkedIngredients.has(index);
+                                    const hasSubs = substitutions[ingredient.name.toLowerCase()];
+                                    const hasConflict = conflicts.some(c => c.ingredient.toLowerCase() === ingredient.name.toLowerCase());
 
                                     return (
-                                        <label
-                                            key={index}
-                                            className="flex items-start gap-3 cursor-pointer group"
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={isChecked}
-                                                onChange={() => toggleIngredient(index)}
-                                                className="mt-1 w-4 h-4 text-emerald-500 border-gray-300 rounded focus:ring-emerald-500"
-                                            />
-                                            <span className={`flex-1 ${isChecked ? 'line-through text-gray-400' : 'text-gray-700'}`}>
-                                                <span className="font-medium">{adjustedQty}</span> {ingredient.unit} {ingredient.name}
-                                            </span>
-                                        </label>
+                                        <div key={index} className="flex flex-col gap-2">
+                                            <div className="flex items-start justify-between group">
+                                                <label className="flex items-start gap-3 cursor-pointer flex-1">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isChecked}
+                                                        onChange={() => toggleIngredient(index)}
+                                                        className="mt-1 w-4 h-4 text-emerald-500 border-gray-300 rounded focus:ring-emerald-500"
+                                                    />
+                                                    <span className={`flex-1 ${isChecked ? 'line-through text-gray-400' : 'text-gray-700'}`}>
+                                                        <span className="font-medium">{adjustedQty}</span> {ingredient.unit} {ingredient.name}
+                                                        {hasConflict && !isChecked && (
+                                                            <span className="ml-2 inline-flex items-center text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold uppercase">
+                                                                Conflict
+                                                            </span>
+                                                        )}
+                                                    </span>
+                                                </label>
+                                                
+                                                {hasSubs && !isChecked && (
+                                                    <button
+                                                        onClick={() => setActiveSubstitution(activeSubstitution === ingredient.name ? null : ingredient.name)}
+                                                        className={`p-1 rounded-md transition-colors ${activeSubstitution === ingredient.name 
+                                                            ? 'bg-amber-100 text-amber-700' 
+                                                            : 'text-amber-500 hover:bg-amber-50'}`}
+                                                        title="Show Substitutes"
+                                                    >
+                                                        <AlertTriangle className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            {/* Substitution Panel */}
+                                            {activeSubstitution === ingredient.name && (
+                                                <div className="ml-7 p-3 bg-amber-50 rounded-lg border border-amber-100 space-y-2">
+                                                    <p className="text-[10px] font-bold text-amber-800 uppercase tracking-wider">Suggested Alternatives:</p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {substitutions[ingredient.name.toLowerCase()].map(sub => (
+                                                            <button
+                                                                key={sub}
+                                                                onClick={() => handleSwapIngredient(ingredient.name, sub)}
+                                                                className="px-2 py-1 bg-white border border-amber-200 rounded text-xs text-amber-700 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all shadow-sm"
+                                                            >
+                                                                {sub}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                     );
                                 })}
                             </div>
