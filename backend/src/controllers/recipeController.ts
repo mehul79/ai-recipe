@@ -35,10 +35,58 @@ export const getSubstitutions = async (req: any, res: Response): Promise<void> =
     }
 };
 
-// Get all recipes for a user
+// Get all recipes for a user with optional search and filter
 export const getRecipes = async (req: any, res: Response): Promise<void> => {
     try {
-        const recipes = await Recipe.find({ user_id: req.userId }).sort({ createdAt: -1 });
+        const { search, type } = req.query;
+        let query: any = { user_id: req.userId };
+
+        // 1. FULL-TEXT SEARCH (Using the text index we created)
+        if (search) {
+            query.$text = { $search: search as string };
+        }
+
+        // 2. ADDITIONAL FILTERS
+        if (type) {
+            query.recipe_type = type;
+        }
+
+        // If searching, we could also sort by text relevance (score)
+        // For now, keeping it sorted by newest first
+        const recipes = await Recipe.find(query).sort(
+            search ? { score: { $meta: 'textScore' } } : { createdAt: -1 }
+        );
+
+        res.status(200).json({ success: true, data: recipes });
+    } catch (error) {
+        console.error("Get Recipes Error:", error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
+
+// Filter recipes by specific ingredient criteria
+export const getRecipesWithIngredient = async (req: any, res: Response): Promise<void> => {
+    try {
+        const { ingredientName, minQuantity } = req.query;
+
+        if (!ingredientName) {
+            res.status(400).json({ success: false, message: 'Ingredient name is required' });
+            return;
+        }
+
+        // 2. ARRAY OPERATOR ($elemMatch)
+        // Find recipes that have an ingredient matching both criteria: 
+        // the name MUST be 'ingredientName' AND quantity MUST be >= 'minQuantity'
+        const recipes = await Recipe.find({
+            user_id: req.userId,
+            ingredients: {
+                $elemMatch: {
+                    name: { $regex: new RegExp(`^${ingredientName}$`, 'i') },
+                    quantity: { $gte: Number(minQuantity) || 0 }
+                }
+            }
+        });
+
         res.status(200).json({ success: true, data: recipes });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Internal server error' });

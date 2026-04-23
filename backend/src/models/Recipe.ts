@@ -62,4 +62,7 @@ const RecipeSchema: Schema = new Schema({
     timestamps: true
 });
 
+// Add text index for name and description
+RecipeSchema.index({ name: 'text', description: 'text' });
+
 export default mongoose.model<IRecipe>('Recipe', RecipeSchema);
