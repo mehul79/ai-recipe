@@ -1,4 +1,4 @@
-# 🍳 AI Recipe Generator with Substitution Engine
+# 🍳 Cook Gen with Substitution Engine
 
 ## (DB + Backend + Frontend Flow Context Document)
 

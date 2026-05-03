@@ -54,61 +54,59 @@ const MealPlanner = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-[var(--paper-bg)] font-serif">
             <Navbar />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Meal Planner</h1>
-                        <p className="text-gray-600 mt-1">Plan your weekly meals</p>
-                    </div>
+                <div className="cookbook-header mb-8">
+                    <h1 className="text-4xl font-bold text-gray-900 uppercase tracking-widest italic">Meal Planner</h1>
+                    <p className="text-gray-600 mt-2 font-serif italic text-lg tracking-tight">Curate your weekly culinary journey</p>
+                </div>
 
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
                     {/* Week Navigation */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 font-sans uppercase tracking-widest text-[10px] font-bold">
                         <button
                             onClick={() => setWeekStart(addDays(weekStart, -7))}
-                            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                            className="px-4 py-2 border border-[var(--border-ink)] text-gray-700 hover:bg-gray-50 transition-all"
                         >
                             Previous Week
                         </button>
                         <button
                             onClick={() => setWeekStart(startOfWeek(new Date()))}
-                            className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors"
+                            className="px-4 py-2 bg-[#9b2226] text-white border border-[#9b2226] hover:bg-[#7a1a1d] transition-all"
                         >
                             This Week
                         </button>
                         <button
                             onClick={() => setWeekStart(addDays(weekStart, 7))}
-                            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                            className="px-4 py-2 border border-[var(--border-ink)] text-gray-700 hover:bg-gray-50 transition-all"
                         >
                             Next Week
                         </button>
                     </div>
-                </div>
 
-                {/* Week Display */}
-                <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-                    <div className="text-center">
-                        <p className="text-sm text-gray-600">Week of</p>
-                        <p className="text-lg font-semibold text-gray-900">
-                            {format(weekStart, 'MMMM d')} - {format(addDays(weekStart, 6), 'MMMM d, yyyy')}
+                    {/* Week Display */}
+                    <div className="text-center px-8 py-2 border-l-2 border-r-2 border-[var(--border-ink)]">
+                        <p className="text-[10px] text-gray-500 uppercase tracking-widest font-sans font-bold mb-1">Schedule for</p>
+                        <p className="text-xl font-bold text-gray-900 italic">
+                            {format(weekStart, 'MMMM d')} — {format(addDays(weekStart, 6), 'MMMM d, yyyy')}
                         </p>
                     </div>
                 </div>
 
                 {/* Calendar Grid */}
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="cookbook-card p-0 overflow-hidden border-2">
                     {/* Header Row */}
-                    <div className="grid grid-cols-8 border-b border-gray-200 bg-gray-50">
-                        <div className="p-4 font-semibold text-gray-700 border-r border-gray-200">
+                    <div className="grid grid-cols-8 border-b-2 border-[var(--border-ink)] bg-gray-50/50">
+                        <div className="p-4 font-bold text-gray-900 uppercase tracking-widest text-xs border-r border-[var(--border-ink)] flex items-center justify-center italic bg-white">
                             Meal
                         </div>
                         {DAYS_OF_WEEK.map((day, index) => (
-                            <div key={day} className="p-4 text-center border-r border-gray-200 last:border-r-0">
-                                <div className="font-semibold text-gray-900">{day}</div>
-                                <div className="text-sm text-gray-500">
+                            <div key={day} className="p-4 text-center border-r border-[var(--border-ink)] last:border-r-0">
+                                <div className="font-bold text-gray-900 uppercase tracking-tight text-sm">{day}</div>
+                                <div className="text-[10px] text-[#9b2226] font-bold font-sans uppercase tracking-widest">
                                     {format(addDays(weekStart, index), 'MMM d')}
                                 </div>
                             </div>
@@ -117,8 +115,8 @@ const MealPlanner = () => {
 
                     {/* Meal Rows */}
                     {MEAL_TYPES.map(mealType => (
-                        <div key={mealType} className="grid grid-cols-8 border-b border-gray-200 last:border-b-0">
-                            <div className="p-4 font-medium text-gray-700 capitalize border-r border-gray-200 bg-gray-50">
+                        <div key={mealType} className="grid grid-cols-8 border-b border-[var(--border-ink)] last:border-b-0">
+                            <div className="p-4 font-bold text-gray-900 uppercase tracking-tighter text-xs border-r border-[var(--border-ink)] bg-gray-50/30 flex items-center italic">
                                 {mealType}
                             </div>
                             {DAYS_OF_WEEK.map((_, dayIndex) => {
@@ -129,28 +127,26 @@ const MealPlanner = () => {
                                 return (
                                     <div
                                         key={dayIndex}
-                                        className="p-3 border-r border-gray-200 last:border-r-0 min-h-[100px] hover:bg-gray-50 transition-colors"
+                                        className="p-3 border-r border-[var(--border-ink)] last:border-r-0 min-h-[120px] hover:bg-gray-50/50 transition-colors relative"
                                     >
                                         {meal ? (
-                                            <div className="relative group">
-                                                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
-                                                    <p className="text-sm font-medium text-emerald-900 line-clamp-2">
-                                                        {meal.recipe_id?.name || 'Unknown Recipe'}
-                                                    </p>
-                                                    <button
-                                                        onClick={() => handleRemoveMeal(meal._id)}
-                                                        className="absolute top-1 right-1 p-1 bg-white rounded hover:bg-red-50 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                    >
-                                                        <X className="w-4 h-4" />
-                                                    </button>
-                                                </div>
+                                            <div className="h-full border border-dashed border-[#9b2226] p-3 bg-white group shadow-[2px_2px_0px_0px_rgba(155,34,38,0.1)]">
+                                                <p className="text-sm font-bold text-gray-900 leading-tight italic line-clamp-3">
+                                                    {meal.recipe_id?.name || 'Unknown Recipe'}
+                                                </p>
+                                                <button
+                                                    onClick={() => handleRemoveMeal(meal._id)}
+                                                    className="absolute top-1 right-1 p-1 text-gray-300 hover:text-[#9b2226] opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
                                             </div>
                                         ) : (
                                             <button
                                                 onClick={() => handleAddMeal(date, mealType)}
-                                                className="w-full h-full flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors group"
+                                                className="w-full h-full flex items-center justify-center text-gray-300 hover:text-[#9b2226] transition-colors group"
                                             >
-                                                <Plus className="w-6 h-6" />
+                                                <Plus className="w-6 h-6 opacity-20 group-hover:opacity-100" />
                                             </button>
                                         )}
                                     </div>
@@ -161,21 +157,29 @@ const MealPlanner = () => {
                 </div>
 
                 {/* Stats */}
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-white rounded-lg border border-gray-200 p-4">
-                        <p className="text-sm text-gray-600">Meals Planned</p>
-                        <p className="text-2xl font-bold text-gray-900">
-                            {mealPlans.length}
-                        </p>
+                <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 font-sans">
+                    <div className="cookbook-card flex items-center gap-4">
+                        <div className="w-12 h-12 border border-[var(--border-ink)] flex items-center justify-center bg-gray-50 text-[#9b2226]">
+                            <CalendarIcon className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Meals Planned</p>
+                            <p className="text-2xl font-bold text-gray-900">{mealPlans.length}</p>
+                        </div>
                     </div>
-                    <div className="bg-white rounded-lg border border-gray-200 p-4">
-                        <p className="text-sm text-gray-600">Total Recipes</p>
-                        <p className="text-2xl font-bold text-gray-900">{recipes.length}</p>
+                    <div className="cookbook-card flex items-center gap-4">
+                        <div className="w-12 h-12 border border-[var(--border-ink)] flex items-center justify-center bg-gray-50 text-[#9b2226]">
+                            <ChefHat className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Library Size</p>
+                            <p className="text-2xl font-bold text-gray-900">{recipes.length}</p>
+                        </div>
                     </div>
-                    <div className="bg-white rounded-lg border border-gray-200 p-4">
-                        <p className="text-sm text-gray-600">This Week</p>
-                        <p className="text-2xl font-bold text-gray-900">
-                            {format(weekStart, 'MMM d')} - {format(addDays(weekStart, 6), 'MMM d')}
+                    <div className="cookbook-card bg-[#9b2226] text-white">
+                        <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest">Active Period</p>
+                        <p className="text-lg font-bold">
+                            {format(weekStart, 'MMM d')} — {format(addDays(weekStart, 6), 'MMM d')}
                         </p>
                     </div>
                 </div>
@@ -236,40 +240,40 @@ const AddMealModal = ({ date, mealType, recipes, onClose, onSuccess }) => {
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl max-w-md w-full p-6">
-                <div className="flex items-center justify-between mb-6">
+            <div className="cookbook-card max-w-md w-full bg-[var(--paper-bg)] font-serif">
+                <div className="flex items-center justify-between mb-6 border-b-2 border-[var(--border-ink)] pb-4">
                     <div>
-                        <h2 className="text-xl font-bold text-gray-900">Add Meal</h2>
-                        <p className="text-sm text-gray-600 capitalize">
-                            {format(new Date(date), 'EEEE, MMM d')} - {mealType}
+                        <h2 className="text-2xl font-bold text-gray-900 uppercase tracking-widest italic leading-tight">Schedule Meal</h2>
+                        <p className="text-xs font-bold text-[#9b2226] uppercase tracking-widest font-sans mt-1">
+                            {format(new Date(date), 'EEEE, MMM d')} • {mealType}
                         </p>
                     </div>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-900">
                         <X className="w-6 h-6" />
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Search */}
-                    <div>
+                    <div className="relative">
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search recipes..."
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                            placeholder="Search your library..."
+                            className="w-full px-3 py-2 border border-[var(--border-ink)] focus:ring-1 focus:ring-[#9b2226] outline-none font-serif"
                         />
                     </div>
 
                     {/* Recipe List */}
-                    <div className="max-h-64 overflow-y-auto space-y-2 custom-scrollbar">
+                    <div className="max-h-64 overflow-y-auto space-y-3 custom-scrollbar pr-2">
                         {filteredRecipes.length > 0 ? (
                             filteredRecipes.map(recipe => (
                                 <label
                                     key={recipe._id}
-                                    className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${selectedRecipe === recipe._id
-                                        ? 'border-emerald-500 bg-emerald-50'
-                                        : 'border-gray-200 hover:bg-gray-50'
+                                    className={`flex items-center gap-4 p-4 border transition-all cursor-pointer ${selectedRecipe === recipe._id
+                                        ? 'border-[#9b2226] bg-white shadow-[3px_3px_0px_0px_#9b2226]'
+                                        : 'border-[var(--border-ink)] bg-white hover:bg-gray-50'
                                         }`}
                                 >
                                     <input
@@ -278,38 +282,38 @@ const AddMealModal = ({ date, mealType, recipes, onClose, onSuccess }) => {
                                         value={recipe._id}
                                         checked={selectedRecipe === recipe._id}
                                         onChange={(e) => setSelectedRecipe(e.target.value)}
-                                        className="w-4 h-4 text-emerald-500 border-gray-300 focus:ring-emerald-500"
+                                        className="w-4 h-4 accent-[#9b2226]"
                                     />
                                     <div className="flex-1">
-                                        <p className="font-medium text-gray-900">{recipe.name}</p>
+                                        <p className="font-bold text-gray-900 italic leading-tight">{recipe.name}</p>
                                         {recipe.cuisine_type && (
-                                            <p className="text-xs text-gray-500">{recipe.cuisine_type}</p>
+                                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest font-sans mt-1">{recipe.cuisine_type}</p>
                                         )}
                                     </div>
                                 </label>
                             ))
                         ) : (
-                            <div className="text-center py-8">
-                                <ChefHat className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                                <p className="text-gray-500">No recipes found</p>
+                            <div className="text-center py-12 border border-dashed border-[var(--border-ink)]">
+                                <ChefHat className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+                                <p className="text-gray-400 italic">No matching recipes found.</p>
                             </div>
                         )}
                     </div>
 
-                    <div className="flex gap-3 pt-4">
+                    <div className="flex gap-4 pt-4">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                            className="flex-1 px-4 py-2 border border-[var(--border-ink)] text-gray-700 font-bold uppercase tracking-widest text-[10px] hover:bg-gray-50 transition-all font-sans"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={loading || !selectedRecipe}
-                            className="flex-1 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+                            className="flex-1 cookbook-button uppercase tracking-widest text-[10px] font-bold disabled:opacity-50"
                         >
-                            {loading ? 'Adding...' : 'Add Meal'}
+                            {loading ? 'Recording...' : 'Record Meal'}
                         </button>
                     </div>
                 </form>

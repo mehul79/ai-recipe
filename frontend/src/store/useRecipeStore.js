@@ -85,7 +85,37 @@ const useRecipeStore = create((set, get) => ({
         set({ generatedRecipe: updatedRecipe });
     },
 
-    clearGeneratedRecipe: () => set({ generatedRecipe: null })
+    clearGeneratedRecipe: () => set({ generatedRecipe: null }),
+
+    fetchRecipeStats: async () => {
+        try {
+            const response = await api.get('/recipes/stats/cuisine');
+            return response.data.data;
+        } catch (error) {
+            console.error('Failed to fetch recipe stats:', error);
+            return [];
+        }
+    },
+
+    fetchMostUsedIngredients: async () => {
+        try {
+            const response = await api.get('/recipes/stats/ingredients');
+            return response.data.data;
+        } catch (error) {
+            console.error('Failed to fetch most used ingredients:', error);
+            return [];
+        }
+    },
+
+    fetchPopularRecipes: async () => {
+        try {
+            const response = await api.get('/recipes/stats/popular');
+            return response.data.data;
+        } catch (error) {
+            console.error('Failed to fetch popular recipes:', error);
+            return [];
+        }
+    }
 }));
 
 export default useRecipeStore;

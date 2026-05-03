@@ -1,6 +1,6 @@
-# UI Boilerplate - AI Recipe Generator
+# UI Boilerplate - Cook Gen
 
-This is a **UI-only boilerplate** version of the AI Recipe Generator frontend. It contains all the UI components and styling but uses **dummy data** instead of making actual API calls to the backend.
+This is a **UI-only boilerplate** version of the Cook Gen frontend. It contains all the UI components and styling but uses **dummy data** instead of making actual API calls to the backend.
 
 ## Purpose
 
@@ -21,7 +21,7 @@ This boilerplate is designed for:
 
 - **Dashboard** - Shows stats, recent recipes, and upcoming meals
 - **Pantry Management** - Add, view, and delete pantry items (UI-only)
-- **AI Recipe Generator** - Generate recipes with dummy AI response
+- **Cook Gen** - Generate recipes with dummy AI response
 - **My Recipes** - Browse saved recipes with search and filters
 - **Recipe Details** - View full recipe information
 - **Meal Planner** - Weekly calendar with meal scheduling
@@ -34,7 +34,7 @@ This boilerplate is designed for:
 ### 1. Replace the `src` folder
 
 ```bash
-cd /Users/raviteja/Documents/TTP/React\ JS/2026/AIRecipeGenerator/frontend/ai-recipe-generator
+cd /Users/raviteja/Documents/TTP/React\ JS/2026/AIRecipeGenerator/frontend/cook-gen
 
 # Backup original src (optional)
 mv src src-original
@@ -74,7 +74,7 @@ src-boilerplate/
 ├── pages/
 │   ├── Dashboard.jsx         # Dashboard with stats
 │   ├── Pantry.jsx            # Pantry management
-│   ├── RecipeGenerator.jsx   # AI recipe generator
+│   ├── RecipeGenerator.jsx   # Cook Gen
 │   ├── MyRecipes.jsx         # Recipe collection
 │   ├── RecipeDetail.jsx      # Recipe details
 │   ├── MealPlanner.jsx       # Weekly meal planner

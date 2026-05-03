@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import mongoose from 'mongoose';
 import PantryItem from '../models/PantryItem.js';
 
 // Get all pantry items
@@ -56,6 +57,27 @@ export const deletePantryItem = async (req: any, res: Response): Promise<void> =
 
         res.status(200).json({ success: true, message: 'Item removed from pantry' });
     } catch (error) {
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
+
+export const getPantryStats = async (req: any, res: Response): Promise<void> => {
+    try {
+        const stats = await PantryItem.aggregate([
+            { $match: { user_id: new mongoose.Types.ObjectId(req.userId) } },
+            {
+                $group: {
+                    _id: "$category",
+                    totalItems: { $sum: 1 },
+                    totalQuantity: { $sum: "$quantity" }
+                }
+            },
+            { $sort: { totalItems: -1 } }
+        ]);
+
+        res.status(200).json({ success: true, data: stats });
+    } catch (error) {
+        console.error("Pantry Stats Error:", error);
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };

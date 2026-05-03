@@ -56,19 +56,19 @@ const MyRecipes = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-[var(--paper-bg)] font-serif">
             <Navbar />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Header */}
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-900">My Recipes</h1>
-                    <p className="text-gray-600 mt-1">Your collection of saved recipes</p>
+                <div className="cookbook-header mb-8">
+                    <h1 className="text-4xl font-bold text-gray-900 uppercase tracking-widest italic">Recipe Library</h1>
+                    <p className="text-gray-600 mt-2 font-serif italic text-lg tracking-tight">Your curated collection of culinary inspirations</p>
                 </div>
 
                 {/* Search and Filters */}
-                <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-                    <div className="flex flex-col lg:flex-row gap-4">
+                <div className="cookbook-card mb-8">
+                    <div className="flex flex-col lg:flex-row gap-6">
                         {/* Search */}
                         <div className="flex-1 relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -76,8 +76,8 @@ const MyRecipes = () => {
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search recipes..."
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                                placeholder="Search your collection..."
+                                className="w-full pl-10 pr-4 py-2 border border-[var(--border-ink)] focus:ring-1 focus:ring-[#9b2226] outline-none font-serif bg-white"
                             />
                         </div>
 
@@ -85,7 +85,7 @@ const MyRecipes = () => {
                         <select
                             value={selectedCuisine}
                             onChange={(e) => setSelectedCuisine(e.target.value)}
-                            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                            className="px-4 py-2 border border-[var(--border-ink)] focus:ring-1 focus:ring-[#9b2226] outline-none font-serif bg-white appearance-none min-w-[160px]"
                         >
                             {cuisines.map(cuisine => (
                                 <option key={cuisine} value={cuisine}>
@@ -98,7 +98,7 @@ const MyRecipes = () => {
                         <select
                             value={selectedDifficulty}
                             onChange={(e) => setSelectedDifficulty(e.target.value)}
-                            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                            className="px-4 py-2 border border-[var(--border-ink)] focus:ring-1 focus:ring-[#9b2226] outline-none font-serif bg-white appearance-none min-w-[160px]"
                         >
                             {difficulties.map(diff => (
                                 <option key={diff} value={diff}>
@@ -110,19 +110,21 @@ const MyRecipes = () => {
                 </div>
 
                 {/* Recipe Count */}
-                <div className="mb-4">
-                    <p className="text-sm text-gray-600">
-                        Showing {filteredRecipes.length} of {recipes.length} recipes
+                <div className="mb-6 flex items-center gap-4">
+                    <div className="flex-1 border-t border-[var(--border-ink)] border-double h-1"></div>
+                    <p className="text-[10px] font-bold text-[#9b2226] uppercase tracking-widest font-sans px-4">
+                        Indexing {filteredRecipes.length} of {recipes.length} entries
                     </p>
+                    <div className="flex-1 border-t border-[var(--border-ink)] border-double h-1"></div>
                 </div>
 
                 {/* Recipes Grid */}
                 {loading ? (
-                    <div className="flex justify-center py-12">
-                        <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="flex justify-center py-20">
+                        <div className="w-10 h-10 border-2 border-[#9b2226] border-t-transparent animate-spin"></div>
                     </div>
                 ) : filteredRecipes.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {filteredRecipes.map(recipe => (
                             <RecipeCard
                                 key={recipe._id}
@@ -132,17 +134,17 @@ const MyRecipes = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                        <ChefHat className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500 mb-4">
-                            {recipes.length === 0 ? 'No recipes yet' : 'No recipes match your filters'}
+                    <div className="cookbook-card py-24 text-center border-dashed border-2">
+                        <ChefHat className="w-16 h-16 text-gray-200 mx-auto mb-6" />
+                        <p className="text-xl text-gray-400 italic mb-8">
+                            {recipes.length === 0 ? 'Your library is currently empty.' : 'No entries found matching your criteria.'}
                         </p>
                         {recipes.length === 0 && (
                             <Link
                                 to="/generate"
-                                className="inline-block bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
+                                className="cookbook-button uppercase tracking-widest text-[10px] font-bold font-sans"
                             >
-                                Generate Your First Recipe
+                                Create Your First Entry
                             </Link>
                         )}
                     </div>
@@ -156,74 +158,71 @@ const RecipeCard = ({ recipe, onDelete }) => {
     const totalTime = (recipe.prep_time || 0) + (recipe.cook_time || 0);
 
     return (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all group">
-            {/* Recipe Image Placeholder */}
-            <div className="h-48 bg-linear-to-br from-emerald-100 to-emerald-200 flex items-center justify-center">
-                <ChefHat className="w-16 h-16 text-emerald-600" />
+        <div className="cookbook-card group p-0 overflow-hidden flex flex-col h-full border-2 transition-all hover:shadow-[6px_6px_0px_0px_rgba(45,42,46,0.1)]">
+            {/* Sketchy Placeholder */}
+            <div className="h-48 bg-gray-50 border-b-2 border-[var(--border-ink)] flex items-center justify-center relative overflow-hidden">
+                <ChefHat className="w-16 h-16 text-gray-200" />
+                <div className="absolute inset-0 border-[20px] border-white/40 pointer-events-none"></div>
+                <div className="absolute top-4 left-4 text-[10px] font-bold font-sans uppercase tracking-[0.2em] text-gray-300">Vol. I</div>
             </div>
 
             {/* Recipe Content */}
-            <div className="p-5">
-                <Link to={`/recipes/${recipe._id}`} className="block mb-3">
-                    <h3 className="font-semibold text-lg text-gray-900 group-hover:text-emerald-600 transition-colors line-clamp-2">
+            <div className="p-6 flex flex-col flex-1">
+                <Link to={`/recipes/${recipe._id}`} className="block mb-4">
+                    <h3 className="text-2xl font-bold text-gray-900 leading-tight italic group-hover:text-[#9b2226] transition-colors line-clamp-2">
                         {recipe.name}
                     </h3>
                     {recipe.description && (
-                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">{recipe.description}</p>
+                        <p className="text-sm text-gray-600 mt-2 line-clamp-2 italic leading-relaxed">{recipe.description}</p>
                     )}
                 </Link>
 
                 {/* Tags */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                    {recipe.recipe_type && (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium capitalize">
-                            {recipe.recipe_type}
-                        </span>
-                    )}
+                <div className="flex flex-wrap gap-2 mb-6 font-sans uppercase tracking-widest text-[9px] font-bold">
                     {recipe.cuisine_type && (
-                        <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs font-medium">
+                        <span className="px-2 py-0.5 border border-[#9b2226] text-[#9b2226]">
                             {recipe.cuisine_type}
                         </span>
                     )}
                     {recipe.difficulty && (
-                        <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${recipe.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
-                            recipe.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                                'bg-red-100 text-red-700'
+                        <span className={`px-2 py-0.5 border ${recipe.difficulty === 'easy' ? 'border-green-800 text-green-800' :
+                            recipe.difficulty === 'medium' ? 'border-amber-800 text-amber-800' :
+                                'border-red-800 text-red-800'
                             }`}>
                             {recipe.difficulty}
                         </span>
                     )}
                     {recipe.dietary_tags && recipe.dietary_tags.slice(0, 2).map(tag => (
-                        <span key={tag} className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium">
+                        <span key={tag} className="px-2 py-0.5 border border-gray-300 text-gray-500">
                             {tag}
                         </span>
                     ))}
                 </div>
 
                 {/* Meta Info */}
-                <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                    <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        <span>{totalTime} mins</span>
+                <div className="mt-auto pt-4 border-t border-[var(--border-ink)] border-dashed flex items-center justify-between text-[10px] font-bold font-sans uppercase tracking-widest text-gray-500">
+                    <div className="flex items-center gap-2">
+                        <Clock className="w-3 h-3" />
+                        <span>{totalTime} minutes</span>
                     </div>
                     {recipe.nutrition?.calories && (
-                        <span>{recipe.nutrition.calories} cal</span>
+                        <span className="border-l border-gray-300 pl-4">{recipe.nutrition.calories} kcal</span>
                     )}
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 pt-4 border-t border-gray-100">
+                <div className="flex gap-4 mt-6">
                     <Link
                         to={`/recipes/${recipe._id}`}
-                        className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white text-center py-2 rounded-lg font-medium transition-colors text-sm"
+                        className="flex-1 cookbook-button text-center uppercase tracking-widest text-[10px] font-bold font-sans"
                     >
-                        View Recipe
+                        Read More
                     </Link>
                     <button
                         onClick={() => onDelete(recipe._id)}
-                        className="px-3 py-2 border border-gray-300 text-gray-700 hover:bg-red-50 hover:border-red-300 hover:text-red-600 rounded-lg transition-colors"
+                        className="p-2 border border-transparent hover:border-[#9b2226] text-gray-300 hover:text-[#9b2226] transition-all"
                     >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-5 h-5" />
                     </button>
                 </div>
             </div>

@@ -59,7 +59,7 @@ const rules = [
 
 const seedSubstitutions = async () => {
     try {
-        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ai-recipe');
+        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/cook-gen');
         console.log('Connected to MongoDB');
 
         // Clear existing rules

@@ -28,7 +28,7 @@ app.use('/api/meal-plans', mealPlanRoutes);
 app.use('/api/shopping-list', shoppingListRoutes);
 
 app.get('/api', (req: Request, res: Response) => {
-    res.json({ message: 'Welcome to the AI Recipe Generator API' });
+    res.json({ message: 'Welcome to the Cook Gen API' });
 });
 
 // Database Connection

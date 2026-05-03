@@ -70,6 +70,16 @@ const usePantryStore = create((set, get) => ({
             const expiryDate = new Date(item.expiry_date);
             return expiryDate >= today && expiryDate <= sevenDaysFromNow;
         });
+    },
+
+    fetchPantryStats: async () => {
+        try {
+            const response = await api.get('/pantry/stats');
+            return response.data.data;
+        } catch (error) {
+            console.error('Failed to fetch pantry stats:', error);
+            return [];
+        }
     }
 }));
 

@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import mongoose from 'mongoose';
 import Recipe from '../models/Recipe.js';
 import PantryItem from '../models/PantryItem.js';
 import Preference from '../models/Preference.js';
@@ -40,19 +41,12 @@ export const getRecipes = async (req: any, res: Response): Promise<void> => {
     try {
         const { search, type } = req.query;
         let query: any = { user_id: req.userId };
-
-        // 1. FULL-TEXT SEARCH (Using the text index we created)
         if (search) {
             query.$text = { $search: search as string };
         }
-
-        // 2. ADDITIONAL FILTERS
         if (type) {
             query.recipe_type = type;
         }
-
-        // If searching, we could also sort by text relevance (score)
-        // For now, keeping it sorted by newest first
         const recipes = await Recipe.find(query).sort(
             search ? { score: { $meta: 'textScore' } } : { createdAt: -1 }
         );
@@ -189,7 +183,7 @@ export const deleteRecipe = async (req: any, res: Response): Promise<void> => {
     }
 };
 
-// Generate AI Recipe
+// Generate Cook Gen Recipe
 export const generateRecipe = async (req: any, res: Response): Promise<void> => {
     try {
         const { 
@@ -266,5 +260,85 @@ export const generateRecipe = async (req: any, res: Response): Promise<void> => 
     } catch (error) {
         console.error("AI Generation Error:", error);
         res.status(500).json({ success: false, message: 'Failed to generate recipe' });
+    }
+};
+
+// --- AGGREGATION QUERIES ---
+
+// 1. Recipe Stats by Cuisine
+export const getRecipeStats = async (req: any, res: Response): Promise<void> => {
+    try {
+        const stats = await Recipe.aggregate([
+            { $match: { user_id: new mongoose.Types.ObjectId(req.userId) } },
+            {
+                $group: {
+                    _id: "$cuisine_type",
+                    count: { $sum: 1 },
+                    avgPrepTime: { $avg: "$prep_time" },
+                    avgCookTime: { $avg: "$cook_time" }
+                }
+            },
+            { $sort: { count: -1 } }
+        ]);
+
+        res.status(200).json({ success: true, data: stats });
+    } catch (error) {
+        console.error("Recipe Stats Error:", error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
+
+// 2. Most Used Ingredients
+export const getMostUsedIngredients = async (req: any, res: Response): Promise<void> => {
+    try {
+        const ingredients = await Recipe.aggregate([
+            { $match: { user_id: new mongoose.Types.ObjectId(req.userId) } },
+            { $unwind: "$ingredients" },
+            {
+                $group: {
+                    _id: { $toLower: "$ingredients.name" },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { count: -1 } },
+            { $limit: 10 }
+        ]);
+
+        res.status(200).json({ success: true, data: ingredients });
+    } catch (error) {
+        console.error("Most Used Ingredients Error:", error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
+
+// 4. Most Viewed Recipes (Behavioral Analytics)
+export const getMostViewedRecipes = async (req: any, res: Response): Promise<void> => {
+    try {
+        const topViewed = await RecipeLog.aggregate([
+            { 
+                $match: { 
+                    user_id: new mongoose.Types.ObjectId(req.userId),
+                    action: 'view'
+                } 
+            },
+            { $group: { _id: "$recipe_id", viewCount: { $sum: 1 }} },
+            { $sort: { viewCount: -1 } },
+            { $limit: 5 },
+            { $lookup: { from: "recipes", localField: "_id", foreignField: "_id", as: "recipeDetails" }},
+            { $unwind: "$recipeDetails" },
+            {
+                $project: {
+                    _id: 1,
+                    viewCount: 1,
+                    name: "$recipeDetails.name",
+                    cuisine: "$recipeDetails.cuisine_type"
+                }
+            }
+        ]);
+
+        res.status(200).json({ success: true, data: topViewed });
+    } catch (error) {
+        console.error("Most Viewed Recipes Error:", error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };

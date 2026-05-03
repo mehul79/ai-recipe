@@ -49,8 +49,13 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     try {
         const { email, password } = req.body;
 
-        // Find user
-        const user = await User.findOne({ email });
+        // Find user using $or logical operator (email or name)
+        const user = await User.findOne({ 
+            $or: [
+                { email: email },
+                { name: email } 
+            ]
+        });
         if (!user) {
             res.status(401).json({ success: false, message: 'Invalid credentials' });
             return;

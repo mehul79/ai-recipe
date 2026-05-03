@@ -106,52 +106,54 @@ const RecipeGenerator = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-[var(--paper-bg)] font-serif">
             <Navbar />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Header */}
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-linear-to-br from-emerald-500 to-emerald-600 rounded-2xl mb-4">
-                        <Sparkles className="w-8 h-8 text-white" />
+                <div className="cookbook-header mb-12">
+                    <div className="flex justify-center mb-6">
+                        <div className="w-16 h-16 border-2 border-[var(--border-ink)] flex items-center justify-center bg-white shadow-[4px_4px_0px_0px_var(--border-ink)]">
+                            <Sparkles className="w-8 h-8 text-[#9b2226]" />
+                        </div>
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-900">AI Recipe Generator</h1>
-                    <p className="text-gray-600 mt-2">Let AI create delicious recipes based on your ingredients</p>
+                    <h1 className="text-4xl font-bold text-gray-900 uppercase tracking-widest italic">Cook Gen</h1>
+                    <p className="text-gray-600 mt-4 font-serif italic text-lg tracking-tight">Consult the digital oracle for your next culinary masterpiece</p>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                     {/* Input Section */}
-                    <div className="space-y-6">
-                        <div className="bg-white rounded-xl border border-gray-200 p-6">
-                            <h2 className="text-lg font-semibold text-gray-900 mb-4">Ingredients</h2>
+                    <div className="space-y-8">
+                        <div className="cookbook-card">
+                            <h2 className="text-xl font-bold uppercase tracking-tighter italic mb-6 border-b border-[var(--border-ink)] pb-2">Ingredients</h2>
 
                             {/* Use Pantry Toggle */}
-                            <div className="flex items-center gap-3 mb-4 p-3 bg-emerald-50 rounded-lg">
+                            <div className="flex items-center gap-4 mb-6 p-4 border border-[#9b2226] bg-gray-50">
                                 <input
                                     type="checkbox"
                                     id="use-pantry"
                                     checked={usePantry}
                                     onChange={(e) => setUsePantry(e.target.checked)}
-                                    className="w-4 h-4 text-emerald-500 border-gray-300 rounded focus:ring-emerald-500"
+                                    className="w-4 h-4 accent-[#9b2226] border-[var(--border-ink)]"
                                 />
-                                <label htmlFor="use-pantry" className="text-sm font-medium text-emerald-900">
+                                <label htmlFor="use-pantry" className="text-sm font-bold uppercase tracking-widest text-[#9b2226]">
                                     Use ingredients from my pantry
                                 </label>
                             </div>
 
                             {/* Manual Ingredient Input */}
-                            <div className="flex gap-2 mb-4">
+                            <div className="flex gap-0 mb-6 font-sans">
                                 <input
                                     type="text"
                                     value={inputValue}
                                     onChange={(e) => setInputValue(e.target.value)}
                                     onKeyPress={(e) => e.key === 'Enter' && addIngredient()}
                                     placeholder="Add ingredient (e.g., tomatoes)"
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                                    className="flex-1 px-4 py-3 border border-[var(--border-ink)] focus:bg-gray-50 outline-none placeholder:italic"
                                 />
                                 <button
                                     onClick={addIngredient}
-                                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors"
+                                    className="px-6 py-3 bg-[var(--border-ink)] text-white hover:bg-[#9b2226] transition-colors"
                                 >
                                     <Plus className="w-5 h-5" />
                                 </button>
@@ -159,18 +161,18 @@ const RecipeGenerator = () => {
 
                             {/* Ingredient Tags */}
                             {ingredients.length > 0 && (
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex flex-wrap gap-3">
                                     {ingredients.map((ingredient, index) => (
                                         <span
                                             key={index}
-                                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm"
+                                            className="inline-flex items-center gap-2 px-3 py-1 border border-[var(--border-ink)] bg-gray-50 text-xs font-bold uppercase tracking-widest"
                                         >
                                             {ingredient}
                                             <button
                                                 onClick={() => removeIngredient(ingredient)}
-                                                className="hover:text-red-600 transition-colors"
+                                                className="hover:text-[#9b2226] transition-colors"
                                             >
-                                                <X className="w-4 h-4" />
+                                                <X className="w-3 h-3" />
                                             </button>
                                         </span>
                                     ))}
@@ -179,20 +181,20 @@ const RecipeGenerator = () => {
                         </div>
 
                         {/* Preferences */}
-                        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
-                            <h2 className="text-lg font-semibold text-gray-900">Preferences</h2>
+                        <div className="cookbook-card space-y-8">
+                            <h2 className="text-xl font-bold uppercase tracking-tighter italic mb-2 border-b border-[var(--border-ink)] pb-2">Preferences</h2>
 
                             {/* Recipe Type */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Recipe Type</label>
+                            <div className="font-sans">
+                                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-4">Recipe Type</label>
                                 <div className="flex flex-wrap gap-2">
                                     {RECIPE_TYPES.map(type => (
                                         <button
                                             key={type}
                                             onClick={() => setRecipeType(type)}
-                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors capitalize ${recipeType === type
-                                                ? 'bg-emerald-500 text-white'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            className={`px-3 py-1.5 border text-[10px] font-bold uppercase tracking-widest transition-all ${recipeType === type
+                                                ? 'bg-[#9b2226] text-white border-[#9b2226]'
+                                                : 'bg-white text-gray-700 border-gray-300 hover:border-[var(--border-ink)]'
                                                 }`}
                                         >
                                             {type}
@@ -202,12 +204,12 @@ const RecipeGenerator = () => {
                             </div>
 
                             {/* Cuisine Type */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Cuisine Type</label>
+                            <div className="font-sans">
+                                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-4">Cuisine Type</label>
                                 <select
                                     value={cuisineType}
                                     onChange={(e) => setCuisineType(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                                    className="w-full px-4 py-3 border border-[var(--border-ink)] bg-white outline-none font-bold uppercase tracking-widest text-xs"
                                 >
                                     {CUISINES.map(cuisine => (
                                         <option key={cuisine} value={cuisine}>{cuisine}</option>
@@ -216,16 +218,16 @@ const RecipeGenerator = () => {
                             </div>
 
                             {/* Dietary Restrictions */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Dietary Restrictions</label>
+                            <div className="font-sans">
+                                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-4">Dietary Restrictions</label>
                                 <div className="flex flex-wrap gap-2">
                                     {DIETARY_OPTIONS.map(option => (
                                         <button
                                             key={option}
                                             onClick={() => toggleDietary(option)}
-                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${dietaryRestrictions.includes(option)
-                                                ? 'bg-emerald-500 text-white'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            className={`px-3 py-1.5 border text-[10px] font-bold uppercase tracking-widest transition-all ${dietaryRestrictions.includes(option)
+                                                ? 'bg-[#9b2226] text-white border-[#9b2226]'
+                                                : 'bg-white text-gray-700 border-gray-300 hover:border-[var(--border-ink)]'
                                                 }`}
                                         >
                                             {option}
@@ -235,16 +237,16 @@ const RecipeGenerator = () => {
                             </div>
 
                             {/* Cooking Time */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Cooking Time</label>
-                                <div className="grid grid-cols-3 gap-2">
+                            <div className="font-sans">
+                                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-4">Preparation Speed</label>
+                                <div className="grid grid-cols-3 gap-3">
                                     {COOKING_TIMES.map(time => (
                                         <button
                                             key={time.value}
                                             onClick={() => setCookingTime(time.value)}
-                                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${cookingTime === time.value
-                                                ? 'bg-emerald-500 text-white'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            className={`px-3 py-3 border text-[10px] font-bold uppercase tracking-widest transition-all ${cookingTime === time.value
+                                                ? 'bg-[#9b2226] text-white border-[#9b2226]'
+                                                : 'bg-white text-gray-700 border-gray-300 hover:border-[var(--border-ink)]'
                                                 }`}
                                         >
                                             {time.label}
@@ -258,12 +260,12 @@ const RecipeGenerator = () => {
                         <button
                             onClick={handleGenerate}
                             disabled={generating}
-                            className="w-full bg-linear-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold py-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full bg-[var(--border-ink)] hover:bg-[#9b2226] text-white font-bold uppercase tracking-[0.3em] py-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-4"
                         >
                             {generating ? (
                                 <>
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    Generating Recipe...
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin"></div>
+                                    Loading...
                                 </>
                             ) : (
                                 <>
@@ -275,161 +277,169 @@ const RecipeGenerator = () => {
                     </div>
 
                     {/* Results Section */}
-                    <div>
-                        {generatedRecipe ? (
-                            <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
-                                {/* Recipe Header */}
-                                <div>
-                                    <h2 className="text-2xl font-bold text-gray-900 mb-2">{generatedRecipe.name}</h2>
-                                    <p className="text-gray-600">{generatedRecipe.description}</p>
+                    <div className="lg:sticky lg:top-8 h-auto lg:h-[calc(100vh-8rem)] flex flex-col">
+                        <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[var(--border-ink)] scrollbar-track-transparent">
+                            {generatedRecipe ? (
+                                <div className="cookbook-card p-0 overflow-hidden">
+                                    {/* Recipe Header */}
+                                    <div className="p-8 border-b-2 border-double border-[var(--border-ink)]">
+                                        <h2 className="text-3xl font-bold text-gray-900 mb-4 italic leading-tight">{generatedRecipe.name}</h2>
+                                        <p className="text-gray-600 italic text-lg leading-relaxed">{generatedRecipe.description}</p>
 
-                                    <div className="flex flex-wrap gap-2 mt-4">
-                                        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium capitalize">
-                                            {generatedRecipe.recipe_type}
-                                        </span>
-                                        <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
-                                            {generatedRecipe.cuisine_type}
-                                        </span>
-                                        <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium capitalize">
-                                            {generatedRecipe.difficulty}
-                                        </span>
-                                        {generatedRecipe.dietary_tags?.map(tag => (
-                                            <span key={tag} className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
-                                                {tag}
+                                        <div className="flex flex-wrap gap-3 mt-6 font-sans">
+                                            <span className="px-3 py-1 border border-[var(--border-ink)] text-[10px] font-bold uppercase tracking-widest">
+                                                {generatedRecipe.recipe_type}
                                             </span>
-                                        ))}
-                                    </div>
-
-                                    <div className="flex items-center gap-6 mt-4 text-sm text-gray-600">
-                                        <div className="flex items-center gap-2">
-                                            <Clock className="w-4 h-4" />
-                                            <span>{(generatedRecipe.prep_time || 0) + (generatedRecipe.cook_time || 0)} mins</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Allergy Conflict Warning */}
-                                {conflicts.length > 0 && (
-                                    <div className="bg-red-50 border border-red-100 rounded-lg p-4 space-y-2">
-                                        <div className="flex items-center gap-2 text-red-700 font-semibold">
-                                            <AlertTriangle className="w-5 h-5" />
-                                            <span>Allergy/Dietary Conflicts Detected</span>
-                                        </div>
-                                        <ul className="text-sm text-red-600 space-y-1">
-                                            {conflicts.map((conflict, idx) => (
-                                                <li key={idx}>
-                                                    • <strong>{conflict.ingredient}</strong> conflicts with your <strong>{conflict.reason}</strong> restriction.
-                                                </li>
-                                            ))}
-                                        </ul>
-                                        <p className="text-xs text-red-500 italic">
-                                            Tip: Use the "Substitutes" button next to the ingredients below to find safe alternatives.
-                                        </p>
-                                    </div>
-                                )}
-
-                                {/* Ingredients */}
-                                <div>
-                                    <h3 className="font-semibold text-gray-900 mb-3">Ingredients</h3>
-                                    <ul className="space-y-3">
-                                        {generatedRecipe.ingredients?.map((ing, index) => (
-                                            <li key={index} className="flex flex-col gap-2">
-                                                <div className="flex items-center justify-between group">
-                                                    <div className="flex items-center gap-2 text-gray-700">
-                                                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-                                                        {ing.quantity} {ing.unit} {ing.name}
-                                                    </div>
-                                                    {substitutions[ing.name.toLowerCase()] && (
-                                                        <button
-                                                            onClick={() => setActiveSubstitution(activeSubstitution === ing.name ? null : ing.name)}
-                                                            className="flex items-center gap-1 text-xs font-medium text-amber-600 hover:text-amber-700 bg-amber-50 px-2 py-1 rounded-md transition-colors"
-                                                        >
-                                                            <AlertTriangle className="w-3 h-3" />
-                                                            Substitutes
-                                                        </button>
-                                                    )}
-                                                </div>
-
-                                                {/* Substitution Panel */}
-                                                {activeSubstitution === ing.name && (
-                                                    <div className="ml-3.5 p-3 bg-gray-50 rounded-lg border border-gray-100 space-y-2">
-                                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Suggested Alternatives:</p>
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {substitutions[ing.name.toLowerCase()].map(sub => (
-                                                                <button
-                                                                    key={sub}
-                                                                    onClick={() => handleSwapIngredient(ing.name, sub)}
-                                                                    className="px-2 py-1 bg-white border border-gray-200 rounded text-xs text-gray-700 hover:border-emerald-500 hover:text-emerald-600 transition-all"
-                                                                >
-                                                                    {sub}
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                {/* Instructions */}
-                                <div>
-                                    <h3 className="font-semibold text-gray-900 mb-3">Instructions</h3>
-                                    <ol className="space-y-3">
-                                        {generatedRecipe.instructions?.map((step, index) => (
-                                            <li key={index} className="flex gap-3">
-                                                <span className="shrink-0 w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-medium">
-                                                    {index + 1}
+                                            <span className="px-3 py-1 border border-[#9b2226] text-[#9b2226] text-[10px] font-bold uppercase tracking-widest">
+                                                {generatedRecipe.cuisine_type}
+                                            </span>
+                                            <span className="px-3 py-1 border border-gray-400 text-gray-600 text-[10px] font-bold uppercase tracking-widest">
+                                                {generatedRecipe.difficulty}
+                                            </span>
+                                            {generatedRecipe.dietary_tags?.map(tag => (
+                                                <span key={tag} className="px-3 py-1 border border-dashed border-gray-400 text-gray-500 text-[10px] font-bold uppercase tracking-widest">
+                                                    {tag}
                                                 </span>
-                                                <span className="text-gray-700 pt-0.5">{step}</span>
-                                            </li>
-                                        ))}
-                                    </ol>
-                                </div>
+                                            ))}
+                                        </div>
 
-                                {/* Nutrition */}
-                                {generatedRecipe.nutrition && (
-                                    <div>
-                                        <h3 className="font-semibold text-gray-900 mb-3">Nutrition (per serving)</h3>
-                                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                                            <NutritionBadge label="Calories" value={generatedRecipe.nutrition.calories} unit="kcal" />
-                                            <NutritionBadge label="Protein" value={generatedRecipe.nutrition.protein} unit="g" />
-                                            <NutritionBadge label="Carbs" value={generatedRecipe.nutrition.carbs} unit="g" />
-                                            <NutritionBadge label="Fats" value={generatedRecipe.nutrition.fats} unit="g" />
-                                            <NutritionBadge label="Fiber" value={generatedRecipe.nutrition.fiber} unit="g" />
+                                        <div className="flex items-center gap-6 mt-6 font-sans uppercase tracking-[0.2em] text-[10px] font-bold text-gray-500">
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="w-4 h-4" />
+                                                <span>Total: {(generatedRecipe.prep_time || 0) + (generatedRecipe.cook_time || 0)} mins</span>
+                                            </div>
                                         </div>
                                     </div>
-                                )}
 
-                                {/* Cooking Tips */}
-                                {generatedRecipe.cooking_tips && generatedRecipe.cooking_tips.length > 0 && (
-                                    <div className="bg-emerald-50 rounded-lg p-4">
-                                        <h3 className="font-semibold text-emerald-900 mb-2">💡 Cooking Tips</h3>
-                                        <ul className="space-y-1">
-                                            {generatedRecipe.cooking_tips.map((tip, index) => (
-                                                <li key={index} className="text-sm text-emerald-800">• {tip}</li>
-                                            ))}
-                                        </ul>
+                                    {/* Allergy Conflict Warning */}
+                                    {conflicts.length > 0 && (
+                                        <div className="bg-red-50 border-b border-[var(--border-ink)] p-6 space-y-4">
+                                            <div className="flex items-center gap-3 text-[#9b2226] font-bold uppercase tracking-widest text-sm">
+                                                <AlertTriangle className="w-5 h-5" />
+                                                <span>Dietary Conflicts Detected</span>
+                                            </div>
+                                            <ul className="text-sm text-gray-800 space-y-2 font-serif italic">
+                                                {conflicts.map((conflict, idx) => (
+                                                    <li key={idx} className="flex gap-2">
+                                                        <span className="font-bold text-[#9b2226]">•</span>
+                                                        <span>{conflict.ingredient} conflicts with {conflict.reason} profile.</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                    {/* Ingredients & Instructions Content */}
+                                    <div className="p-8 space-y-10">
+                                        {/* Ingredients */}
+                                        <div>
+                                            <h3 className="text-xl font-bold uppercase tracking-tighter italic mb-6 border-b border-gray-100 pb-2">Ingredients</h3>
+                                            <ul className="space-y-1">
+                                                {generatedRecipe.ingredients?.map((ing, index) => (
+                                                    <li key={index} className="flex flex-col gap-1">
+                                                        <div className="flex items-center justify-between group border-b border-gray-50 pb-1">
+                                                            <div className="flex items-center gap-3 text-gray-800 text-lg">
+                                                                <span className="w-1.5 h-1.5 bg-[#9b2226]"></span>
+                                                                <span className="font-bold">{ing.quantity}</span> {ing.unit} {ing.name}
+                                                            </div>
+                                                            {substitutions[ing.name.toLowerCase()] && (
+                                                                <button
+                                                                    onClick={() => setActiveSubstitution(activeSubstitution === ing.name ? null : ing.name)}
+                                                                    className={`p-1 transition-colors ${activeSubstitution === ing.name ? 'text-[#9b2226]' : 'text-gray-400'}`}
+                                                                >
+                                                                    <Sparkles className="w-4 h-4" />
+                                                                </button>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Substitution Panel */}
+                                                        {activeSubstitution === ing.name && (
+                                                            <div className="ml-4.5 p-3 border border-dashed border-[var(--border-ink)] bg-gray-50 space-y-2">
+                                                                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Alternatives:</p>
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    {substitutions[ing.name.toLowerCase()].map(sub => (
+                                                                        <button
+                                                                            key={sub}
+                                                                            onClick={() => handleSwapIngredient(ing.name, sub)}
+                                                                            className="px-2 py-1 bg-white border border-[var(--border-ink)] text-[10px] font-bold uppercase tracking-tight hover:bg-[#9b2226] hover:text-white transition-all shadow-sm"
+                                                                        >
+                                                                            {sub}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+
+                                        {/* Instructions */}
+                                        <div>
+                                            <h3 className="text-xl font-bold uppercase tracking-tighter italic mb-6 border-b border-gray-100 pb-2">Method</h3>
+                                            <ol className="space-y-6">
+                                                {generatedRecipe.instructions?.map((step, index) => (
+                                                    <li key={index} className="flex gap-4">
+                                                        <span className="shrink-0 w-8 h-8 border border-[var(--border-ink)] text-gray-900 flex items-center justify-center text-sm font-bold italic">
+                                                            {index + 1}
+                                                        </span>
+                                                        <span className="text-gray-800 text-lg leading-relaxed pt-0.5">{step}</span>
+                                                    </li>
+                                                ))}
+                                            </ol>
+                                        </div>
+
+                                        {/* Nutrition */}
+                                        {generatedRecipe.nutrition && (
+                                            <div className="pt-8 border-t border-[var(--border-ink)]">
+                                                <h3 className="text-lg font-bold uppercase tracking-widest mb-6 text-center italic">Nutritional Data</h3>
+                                                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                                                    <NutritionBadge label="Calories" value={generatedRecipe.nutrition.calories} unit="kcal" />
+                                                    <NutritionBadge label="Protein" value={generatedRecipe.nutrition.protein} unit="g" />
+                                                    <NutritionBadge label="Carbs" value={generatedRecipe.nutrition.carbs} unit="g" />
+                                                    <NutritionBadge label="Fats" value={generatedRecipe.nutrition.fats} unit="g" />
+                                                    <NutritionBadge label="Fiber" value={generatedRecipe.nutrition.fiber} unit="g" />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Cooking Tips */}
+                                        {generatedRecipe.cooking_tips && generatedRecipe.cooking_tips.length > 0 && (
+                                            <div className="p-6 border border-[var(--border-ink)] bg-gray-50 relative">
+                                                <h3 className="font-bold text-gray-900 mb-4 uppercase tracking-widest text-xs flex items-center gap-2">
+                                                    <span className="w-2 h-2 bg-[#9b2226]"></span>
+                                                    Culinary Secrets
+                                                </h3>
+                                                <ul className="space-y-3">
+                                                    {generatedRecipe.cooking_tips.map((tip, index) => (
+                                                        <li key={index} className="text-sm italic text-gray-700 leading-relaxed">• {tip}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+
+                                        {/* Actions */}
+                                        <div className="pt-8 border-t border-[var(--border-ink)]">
+                                            <button
+                                                onClick={handleSaveRecipe}
+                                                disabled={saving}
+                                                className="w-full bg-[#9b2226] hover:bg-black text-white font-bold uppercase tracking-[0.3em] py-4 transition-all disabled:opacity-50"
+                                            >
+                                                {saving ? 'Adding to library...' : 'Inscribe in Cookbook'}
+                                            </button>
+                                        </div>
                                     </div>
-                                )}
-
-                                {/* Actions */}
-                                <div className="flex gap-3 pt-4 border-t border-gray-200">
-                                    <button
-                                        onClick={handleSaveRecipe}
-                                        disabled={saving}
-                                        className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-medium py-2.5 rounded-lg transition-colors disabled:opacity-50"
-                                    >
-                                        {saving ? 'Saving...' : 'Save Recipe'}
-                                    </button>
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center h-full flex flex-col items-center justify-center">
-                                <ChefHat className="w-16 h-16 text-gray-300 mb-4" />
-                                <p className="text-gray-500">Your generated recipe will appear here</p>
-                            </div>
-                        )}
+                            ) : (
+                                <div className="cookbook-card border-dashed border-2 flex flex-col items-center justify-center p-20 text-center h-full min-h-[600px] bg-gray-50/50">
+                                    <div className="w-20 h-20 border-2 border-gray-200 flex items-center justify-center mb-6 opacity-40">
+                                        <ChefHat className="w-10 h-10 text-gray-300" />
+                                    </div>
+                                    <p className="text-gray-400 font-serif italic text-xl">Waiting for your request to be inscribed...</p>
+                                    <div className="mt-8 w-24 h-0.5 bg-gray-100"></div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -438,9 +448,9 @@ const RecipeGenerator = () => {
 };
 
 const NutritionBadge = ({ label, value, unit }) => (
-    <div className="text-center p-3 bg-gray-50 rounded-lg">
-        <div className="text-lg font-bold text-gray-900">{value}{unit}</div>
-        <div className="text-xs text-gray-600">{label}</div>
+    <div className="text-center p-2 border border-gray-100 bg-white">
+        <div className="text-lg font-bold text-gray-900 leading-tight">{value}<span className="text-[8px] ml-0.5">{unit}</span></div>
+        <div className="text-[8px] text-gray-500 uppercase tracking-widest font-bold font-sans mt-1">{label}</div>
     </div>
 );
 

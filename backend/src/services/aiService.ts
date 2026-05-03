@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -29,9 +29,71 @@ export interface AIGeneratedRecipe {
     cooking_tips: string[];
 }
 
-const client = new OpenAI({
-    baseURL: "https://openrouter.ai/api/v1",
-    apiKey: process.env.OPENROUTER_API_KEY,
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
+const model = genAI.getGenerativeModel({
+    model: "gemini-2.5-flash",
+    generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: {
+            type: SchemaType.OBJECT,
+            properties: {
+                name: { type: SchemaType.STRING },
+                description: { type: SchemaType.STRING },
+                recipe_type: { 
+                    type: SchemaType.STRING,
+                    enum: ["shake", "dessert", "savory", "complete meal", "snack"]
+                },
+                cuisine_type: { type: SchemaType.STRING },
+                difficulty: { 
+                    type: SchemaType.STRING,
+                    enum: ["easy", "medium", "hard"]
+                },
+                prep_time: { type: SchemaType.NUMBER },
+                cook_time: { type: SchemaType.NUMBER },
+                servings: { type: SchemaType.NUMBER },
+                instructions: { 
+                    type: SchemaType.ARRAY,
+                    items: { type: SchemaType.STRING }
+                },
+                dietary_tags: { 
+                    type: SchemaType.ARRAY,
+                    items: { type: SchemaType.STRING }
+                },
+                ingredients: { 
+                    type: SchemaType.ARRAY,
+                    items: {
+                        type: SchemaType.OBJECT,
+                        properties: {
+                            name: { type: SchemaType.STRING },
+                            quantity: { type: SchemaType.NUMBER },
+                            unit: { type: SchemaType.STRING }
+                        },
+                        required: ["name", "quantity", "unit"]
+                    }
+                },
+                nutrition: { 
+                    type: SchemaType.OBJECT,
+                    properties: {
+                        calories: { type: SchemaType.NUMBER },
+                        protein: { type: SchemaType.NUMBER },
+                        carbs: { type: SchemaType.NUMBER },
+                        fats: { type: SchemaType.NUMBER },
+                        fiber: { type: SchemaType.NUMBER }
+                    },
+                    required: ["calories", "protein", "carbs", "fats", "fiber"]
+                },
+                cooking_tips: { 
+                    type: SchemaType.ARRAY,
+                    items: { type: SchemaType.STRING }
+                }
+            },
+            required: [
+                "name", "description", "recipe_type", "cuisine_type", "difficulty",
+                "prep_time", "cook_time", "servings", "instructions", "dietary_tags",
+                "ingredients", "nutrition", "cooking_tips"
+            ]
+        }
+    }
 });
 
 export const generateRecipeFromAI = async (
@@ -49,54 +111,16 @@ export const generateRecipeFromAI = async (
         3. If cooking_time_limit is "long", the TOTAL time (prep_time + cook_time) MUST be over 60 minutes.
         4. If recipe_type is specified (e.g., shake, dessert, savory, complete meal, snack), the recipe MUST match that type.
         5. Respect dietary restrictions and cuisine types if provided.
-
-        The response MUST be a valid JSON object with EXACTLY this structure:
-        {
-            "name": "Recipe Name",
-            "description": "Short description",
-            "recipe_type": "shake" | "dessert" | "savory" | "complete meal" | "snack",
-            "cuisine_type": "Cuisine",
-            "difficulty": "easy" | "medium" | "hard",
-            "prep_time": number,
-            "cook_time": number,
-            "servings": number,
-            "instructions": ["Step 1", "Step 2"],
-            "dietary_tags": ["Tag 1", "Tag 2"],
-            "ingredients": [{"name": "Ingredient 1", "quantity": number, "unit": "string"}],
-            "nutrition": {"calories": number, "protein": number, "carbs": number, "fats": number, "fiber": number},
-            "cooking_tips": ["Tip 1", "Tip 2"]
-        }
-
-        Respond with ONLY the raw JSON object. No markdown, no backticks, no explanation.
     `;
 
     try {
-        const response = await client.chat.completions.create({
-            model: "inclusionai/ling-2.6-flash:free",
-            messages: [
-                {
-                    role: "system",
-                    content: "You are a professional chef and nutritionist. Always respond with valid raw JSON only, no markdown formatting."
-                },
-                {
-                    role: "user",
-                    content: prompt
-                }
-            ],
-            response_format: { type: "json_object" },
-        });
-
-        const text = response.choices[0].message.content;
+        const result = await model.generateContent(prompt);
+        const response = result.response;
+        const text = response.text();
+        
         if (!text) throw new Error("Empty response from AI");
 
-        // More robust JSON extraction
-        let jsonStr = text;
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-            jsonStr = jsonMatch[0];
-        }
-
-        return JSON.parse(jsonStr);
+        return JSON.parse(text);
 
     } catch (error) {
         console.error("AI Generation Error:", error);
